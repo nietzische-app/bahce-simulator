@@ -12,6 +12,8 @@ local PlotController = {}
 local remotesFolder: Folder
 local getSelectedSeed: (() -> string?)?
 local getState: (() -> any)?
+local getSelectedGear: (() -> string?)?
+local clearGear: (() -> ())?
 
 local function hint(msg: string)
 	local StarterGui = game:GetService("StarterGui")
@@ -20,7 +22,15 @@ local function hint(msg: string)
 	end)
 end
 
-function PlotController.Init(remotes: Folder, selectedSeedFn: () -> string?, stateFn: () -> any)
+function PlotController.Init(
+	remotes: Folder,
+	selectedSeedFn: () -> string?,
+	stateFn: () -> any,
+	selectedGearFn: (() -> string?)?,
+	clearGearFn: (() -> ())?
+)
+	getSelectedGear = selectedGearFn
+	clearGear = clearGearFn
 	remotesFolder = remotes
 	getSelectedSeed = selectedSeedFn
 	getState = stateFn
@@ -65,6 +75,16 @@ function PlotController.Init(remotes: Folder, selectedSeedFn: () -> string?, sta
 
 		local slotIndex = soil:GetAttribute("SlotIndex")
 		if typeof(slotIndex) ~= "number" then
+			return
+		end
+
+		-- Sulama Kabı seçiliyse bu yatağa kullan (sunucu doğrular)
+		local gearId = if getSelectedGear then getSelectedGear() else nil
+		if gearId then
+			(remotesFolder:WaitForChild("UseGear") :: RemoteEvent):FireServer(gearId, slotIndex)
+			if clearGear then
+				clearGear()
+			end
 			return
 		end
 

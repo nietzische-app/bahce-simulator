@@ -24,6 +24,7 @@ export type SeedConfig = {
 export type PlantInstance = {
 	seedId: string,
 	plantedAt: number, -- unix seconds (os.time)
+	watered: boolean?, -- Sulama Kabı used
 	slotIndex: number,
 }
 
@@ -51,6 +52,9 @@ export type PlayerData = {
 	dailyStreak: number?, -- last claimed calendar day (1..7)
 	quests: any?, -- { day: number, list: { {id, progress, claimed} } }
 	goldenPity: number?, -- harvests since last Golden/Rainbow mutation
+	gear: { [string]: number }?, -- gearId -> count
+	sprinkler: { startAt: number, endAt: number }?,
+	fertilizerCharges: number?,
 	plotIndex: number?, -- assigned plot (persisted preference)
 	sessionLockId: string?,
 	sessionLockExpires: number?,

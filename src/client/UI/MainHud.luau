@@ -268,6 +268,7 @@ function MainHud.Create(handlers: {
 	end
 
 	local selectedSeed: string? = nil
+	local selectedGear: string? = nil
 
 	local handles: HudHandles
 	handles = {
@@ -398,7 +399,7 @@ function MainHud.Create(handlers: {
 				inventoryFrame.Visible = false
 			end
 		end,
-		refreshInventory = function(state: any)
+		refreshInventory = function(state: any, useGear: ((string) -> ())?)
 			for _, child in inventoryList:GetChildren() do
 				if child:IsA("TextButton") or child:IsA("TextLabel") then
 					child:Destroy()
@@ -432,6 +433,51 @@ function MainHud.Create(handlers: {
 						end)
 					end
 					y += 42
+				end
+			end
+			local gear = state.gear
+			if typeof(gear) == "table" then
+				for _, g in gear.items or {} do
+					local count = (gear.owned or {})[g.id] or 0
+					if count > 0 then
+						local row = makeButton(
+							string.format("Alet: %s  ×%d (kullan)", g.displayName, count),
+							inventoryList,
+							UDim2.new(1, -8, 0, 36),
+							nil,
+							Color3.fromRGB(60, 80, 120)
+						)
+						row.MouseButton1Click:Connect(function()
+							if g.id == "WateringCan" then
+								selectedGear = g.id
+								handles.setNotify(
+									"Sulama Kabı seçildi — büyüyen bir bitkiye yaklaş ve etkileş.",
+									"info"
+								)
+							elseif useGear then
+								useGear(g.id)
+							end
+						end)
+						y += 42
+					end
+				end
+				local extras = {}
+				if (gear.sprinklerSecondsLeft or 0) > 0 then
+					table.insert(extras, string.format("Sprinkler: %d sn", gear.sprinklerSecondsLeft))
+				end
+				if (gear.fertilizerCharges or 0) > 0 then
+					table.insert(extras, string.format("Gübre hazır: %d hasat", gear.fertilizerCharges))
+				end
+				if #extras > 0 then
+					local info = Instance.new("TextLabel")
+					info.Size = UDim2.new(1, -8, 0, 22)
+					info.BackgroundTransparency = 1
+					info.TextScaled = true
+					info.Font = Enum.Font.Gotham
+					info.TextColor3 = Color3.fromRGB(150, 200, 255)
+					info.Text = table.concat(extras, "  •  ")
+					info.Parent = inventoryList
+					y += 28
 				end
 			end
 			inventoryList.CanvasSize = UDim2.new(0, 0, 0, y + 8);
@@ -494,6 +540,25 @@ function MainHud.Create(handlers: {
 				)
 				info.Parent = shopList
 				y += 26
+			end
+
+			addSection("Aletler (her zaman rafta)")
+			local gearState = state.gear
+			if typeof(gearState) == "table" then
+				for _, g in gearState.items or {} do
+					local row = makeButton(
+						string.format("%s — %d coin: %s", g.displayName, g.price, g.description),
+						shopList,
+						UDim2.new(1, -8, 0, 36),
+						nil,
+						Color3.fromRGB(60, 90, 130)
+					)
+					row.TextWrapped = true
+					row.MouseButton1Click:Connect(function()
+						shopHandlers.buyGear(g.id, 1)
+					end)
+					y += 42
+				end
 			end
 
 			addSection("Mutasyon Oranları (hasat başına)")
@@ -591,6 +656,12 @@ function MainHud.Create(handlers: {
 	btnShop.MouseButton1Click:Connect(handles.toggleShop);
 	(handles :: any).GetSelectedSeed = function(): string?
 		return (handles :: any)._selectedSeed
+	end
+	(handles :: any).GetSelectedGear = function(): string?
+		return selectedGear
+	end
+	(handles :: any).ClearSelectedGear = function()
+		selectedGear = nil
 	end
 
 	return handles

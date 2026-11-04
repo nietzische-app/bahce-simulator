@@ -10,6 +10,7 @@ local Mutations = require(game.ReplicatedStorage.Shared.Config.Mutations)
 local WeatherService = require(script.Parent.WeatherService)
 local PlotService = require(script.Parent.PlotService)
 local QuestService = require(script.Parent.QuestService)
+local GearService = require(script.Parent.GearService)
 
 local PlantService = {}
 
@@ -44,7 +45,8 @@ function PlantService.GetProgress(plant: Types.PlantInstance, data: Types.Player
 		return 0, false, 0
 	end
 	local need = effectiveGrowTime(seed, data.upgrades)
-	local elapsed = os.time() - plant.plantedAt
+	local now = os.time()
+	local elapsed = now - plant.plantedAt + GearService.SprinklerBonus(data, plant.plantedAt, now)
 	local progress = math.clamp(elapsed / need, 0, 1)
 	local ready = elapsed >= need
 	local remaining = math.max(0, need - elapsed)
@@ -96,19 +98,28 @@ function PlantService.Harvest(data: Types.PlayerData, slotIndex: number): (boole
 	table.remove(data.plants, idx)
 	data.totalHarvested += 1
 	local boosts = if WeatherService.MutationBoosts then WeatherService.MutationBoosts() else {}
+	boosts = GearService.MutationBoosts(data, boosts, os.time())
 	local mutationId, pity = Mutations.Roll(PlantService.rng, boosts, data.goldenPity)
 	data.goldenPity = pity
 	local cropKey = Mutations.CropKey(seed.id, mutationId)
-	data.inventory[cropKey] = (data.inventory[cropKey] or 0) + 1
+	local bonus = GearService.ConsumeFertilizer(data)
+	data.inventory[cropKey] = (data.inventory[cropKey] or 0) + 1 + bonus
 	local mut = Mutations.Get(mutationId)
 	QuestService.Track(data, "harvest", 1)
+	local extra = if bonus > 0 then string.format(" Gübre: +%d ürün!", bonus) else ""
 	if mut then
 		QuestService.Track(data, "mutated", 1)
 		return true,
-			string.format("%s %s hasat edildi! (x%d değer)", mut.displayName, seed.displayName, mut.multiplier),
+			string.format(
+				"%s %s hasat edildi! (x%d değer)%s",
+				mut.displayName,
+				seed.displayName,
+				mut.multiplier,
+				extra
+			),
 			seed.sellPrice * mut.multiplier
 	end
-	return true, seed.displayName .. " hasat edildi!", seed.sellPrice
+	return true, seed.displayName .. " hasat edildi!" .. extra, seed.sellPrice
 end
 
 function PlantService.InstantGrowAll(data: Types.PlayerData)
@@ -145,6 +156,9 @@ function PlantService.SyncVisuals(player: Player, data: Types.PlayerData)
 	local maxSlots = PlantService.MaxSlots(data)
 	for s = 1, GameConfig.BASE_PLOT_SLOTS + GameConfig.MAX_EXTRA_SLOTS do
 		PlotService.SetSlotLocked(primary, s, s > maxSlots)
+	end
+	if PlotService.SetSprinkler then
+		PlotService.SetSprinkler(primary, GearService.SprinklerActive(data, os.time()))
 	end
 	-- Clear then draw
 	for s = 1, GameConfig.BASE_PLOT_SLOTS + GameConfig.MAX_EXTRA_SLOTS do

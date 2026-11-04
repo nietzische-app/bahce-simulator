@@ -24,6 +24,7 @@ local DailyRewardService = require(script.Parent.DailyRewardService)
 local MonetizationService = require(script.Parent.MonetizationService)
 local StockService = require(script.Parent.StockService)
 local QuestService = require(script.Parent.QuestService)
+local GearService = require(script.Parent.GearService)
 
 local GameService = {}
 
@@ -49,6 +50,7 @@ local function buildState(player: Player, data: any)
 		daily = DailyRewardService.Serialize(data),
 		quests = QuestService.Serialize(data),
 		stock = StockService.Snapshot(player.UserId, os.time()),
+		gear = GearService.Serialize(data, os.time()),
 		weather = WeatherService.GetState(),
 		seeds = Seeds.ListOrdered(),
 		shop = {
@@ -226,6 +228,45 @@ function GameService.Init()
 		end
 		withProfile(player, "upgrade", function(profile)
 			local ok, msg = EconomyService.BuyUpgrade(profile.Data, upgradeType)
+			notify(player, msg, if ok then "ok" else "warn")
+			pushState(player)
+		end)
+	end)
+
+	Remotes.Event("BuyGear").OnServerEvent:Connect(function(player, gearId, amount)
+		if typeof(gearId) ~= "string" then
+			return
+		end
+		if typeof(amount) ~= "number" then
+			amount = 1
+		end
+		withProfile(player, "gear", function(profile)
+			local ok, msg = GearService.Buy(profile.Data, gearId, amount)
+			notify(player, msg, if ok then "ok" else "warn")
+			pushState(player)
+		end)
+	end)
+
+	Remotes.Event("UseGear").OnServerEvent:Connect(function(player, gearId, slotIndex)
+		if typeof(gearId) ~= "string" or (slotIndex ~= nil and typeof(slotIndex) ~= "number") then
+			return
+		end
+		withProfile(player, "gear", function(profile)
+			local data = profile.Data
+			local ok, msg = GearService.Use(
+				data,
+				gearId,
+				if slotIndex then math.floor(slotIndex) else nil,
+				os.time(),
+				function(s)
+					local _, plant = PlantService.FindPlant(data, s)
+					return plant
+				end,
+				function(plant)
+					local _, ready, remaining = PlantService.GetProgress(plant, data)
+					return ready, remaining
+				end
+			)
 			notify(player, msg, if ok then "ok" else "warn")
 			pushState(player)
 		end)

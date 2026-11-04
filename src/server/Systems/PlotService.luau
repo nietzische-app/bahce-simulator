@@ -275,6 +275,7 @@ function PlotService.ReleasePlots(userId: number)
 				end
 			end
 		end
+		PlotService.SetSprinkler(info, false)
 		PlotService.RefreshSign(info)
 	end
 	byUser[userId] = nil
@@ -394,6 +395,37 @@ function PlotService.UpdatePlantVisual(
 			return
 		end
 	end
+end
+
+-- Sprinkler visual: imported "Sprinkler" model if present, else a simple Part placeholder.
+function PlotService.SetSprinkler(info: PlotInfo, active: boolean)
+	local existing = info.model:FindFirstChild("Asset_Sprinkler")
+	if not active then
+		if existing then
+			existing:Destroy()
+		end
+		return
+	end
+	if existing or not info.model.PrimaryPart then
+		return
+	end
+	local at = info.model.PrimaryPart.CFrame * CFrame.new(0, 1.5, 0)
+	local clone = if ModelCatalog.Find("Sprinkler") then ModelCatalog.Clone("Sprinkler") else nil
+	if clone then
+		clone.Name = "Asset_Sprinkler"
+		ModelCatalog.AnchorAll(clone)
+		ModelCatalog.PivotTo(clone, at)
+		clone.Parent = info.model
+		return
+	end
+	local part = Instance.new("Part")
+	part.Name = "Asset_Sprinkler"
+	part.Anchored = true
+	part.CanCollide = false
+	part.Size = Vector3.new(1, 2, 1)
+	part.Color = Color3.fromRGB(80, 140, 220)
+	part.CFrame = at
+	part.Parent = info.model
 end
 
 function PlotService.GetSlotPart(info: PlotInfo, slotIndex: number): BasePart?

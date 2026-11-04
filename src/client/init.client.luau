@@ -48,13 +48,18 @@ local function applyState(s: any)
 	state = s
 	hud.setCoins(s.coins or 0)
 	hud.setWeather(s.weather)
-	hud.refreshInventory(s)
+	hud.refreshInventory(s, function(gearId: string)
+		(remotes:WaitForChild("UseGear") :: RemoteEvent):FireServer(gearId)
+	end)
 	hud.refreshQuests(s, function(index: number)
 		(remotes:WaitForChild("ClaimQuest") :: RemoteEvent):FireServer(index)
 	end)
 	hud.refreshShop(s, {
 		buySeed = function(id: string, amount: number)
 			(remotes:WaitForChild("BuySeed") :: RemoteEvent):FireServer(id, amount)
+		end,
+		buyGear = function(id: string, amount: number)
+			(remotes:WaitForChild("BuyGear") :: RemoteEvent):FireServer(id, amount)
 		end,
 		buyUpgrade = function(kind: string)
 			(remotes:WaitForChild("BuyUpgrade") :: RemoteEvent):FireServer(kind)
@@ -80,6 +85,10 @@ PlotController.Init(remotes, function()
 	return (hud :: any).GetSelectedSeed and (hud :: any).GetSelectedSeed() or nil
 end, function()
 	return state
+end, function()
+	return (hud :: any).GetSelectedGear and (hud :: any).GetSelectedGear() or nil
+end, function()
+	(hud :: any).ClearSelectedGear()
 end)
 
 -- Request initial state
