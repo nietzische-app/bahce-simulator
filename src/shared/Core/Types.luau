@@ -14,8 +14,11 @@ export type SeedConfig = {
 	sellPrice: number,
 	buyPrice: number,
 	color: Color3,
-	-- Asset hook: replace placeholder with Studio/AI mesh later
+	-- Asset hook: Roblox asset id (optional) OR ReplicatedStorage.Models name
 	assetId: string?,
+	-- Model names under ReplicatedStorage/Models (imported FBX from assets/models)
+	modelSeedling: string?,
+	modelMature: string?,
 }
 
 export type PlantInstance = {

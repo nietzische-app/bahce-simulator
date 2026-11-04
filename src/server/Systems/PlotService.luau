@@ -6,6 +6,8 @@
 
 local Workspace = game:GetService("Workspace")
 local GameConfig = require(game.ReplicatedStorage.Shared.Config.Game)
+local ModelCatalog = require(game.ReplicatedStorage.Shared.Core.ModelCatalog)
+local Seeds = require(game.ReplicatedStorage.Shared.Config.Seeds)
 
 local PlotService = {}
 
@@ -153,6 +155,54 @@ function PlotService.Init()
 	end
 
 	print(string.format("[PlotService] Built %d placeholder plots", GameConfig.PLOT_COUNT))
+	PlotService.TrySpawnWorldProps()
+end
+
+function PlotService.TrySpawnWorldProps()
+	local folder = Workspace:FindFirstChild("WorldProps")
+	if folder then
+		folder:Destroy()
+	end
+	folder = Instance.new("Folder")
+	folder.Name = "WorldProps"
+	folder.Parent = Workspace
+
+	local props = {
+		{ name = "GardenPlot", cframe = CFrame.new(0, 0, 28) },
+		{ name = "SeedShopStall", cframe = CFrame.new(-28, 0, 0) },
+		{ name = "SellStand", cframe = CFrame.new(28, 0, 0) },
+	}
+	for _, spec in props do
+		local clone = ModelCatalog.Clone(spec.name)
+		if clone then
+			ModelCatalog.AnchorAll(clone)
+			ModelCatalog.PivotTo(clone, spec.cframe)
+			clone.Parent = folder
+		else
+			-- Named placeholder so Studio art can replace later
+			local marker = Instance.new("Part")
+			marker.Name = "Asset_" .. spec.name
+			marker.Size = Vector3.new(6, 1, 6)
+			marker.Anchored = true
+			marker.Color = Color3.fromRGB(180, 160, 120)
+			marker.Material = Enum.Material.Wood
+			marker.CFrame = spec.cframe * CFrame.new(0, 0.5, 0)
+			marker.Parent = folder
+			local bb = Instance.new("BillboardGui")
+			bb.Size = UDim2.fromOffset(160, 28)
+			bb.StudsOffset = Vector3.new(0, 3, 0)
+			bb.AlwaysOnTop = true
+			bb.Parent = marker
+			local label = Instance.new("TextLabel")
+			label.Size = UDim2.fromScale(1, 1)
+			label.BackgroundTransparency = 1
+			label.Text = spec.name .. " (FBX import et)"
+			label.TextScaled = true
+			label.Font = Enum.Font.Gotham
+			label.TextColor3 = Color3.new(1, 1, 1)
+			label.Parent = bb
+		end
+	end
 end
 
 function PlotService.GetPlots(): { PlotInfo }
@@ -257,7 +307,8 @@ function PlotService.UpdatePlantVisual(
 	slotIndex: number,
 	seedColor: Color3?,
 	progress: number?,
-	ready: boolean?
+	ready: boolean?,
+	seedId: string?
 )
 	for _, soil in info.slotsFolder:GetChildren() do
 		if soil:IsA("BasePart") and soil:GetAttribute("SlotIndex") == slotIndex then
@@ -268,8 +319,62 @@ function PlotService.UpdatePlantVisual(
 				end
 				return
 			end
-			local visual = existing :: BasePart?
-			if not visual then
+
+			local modelName: string? = nil
+			if seedId then
+				local cfg = Seeds.Get(seedId)
+				if cfg then
+					local prog = progress or 0
+					if ready or prog >= 0.85 then
+						modelName = cfg.modelMature
+					else
+						modelName = cfg.modelSeedling or cfg.modelMature
+					end
+				end
+			end
+
+			-- Prefer imported mesh from ReplicatedStorage.Models when available
+			if modelName and ModelCatalog.Find(modelName) then
+				local needSwap = true
+				if existing and existing:GetAttribute("ModelName") == modelName then
+					needSwap = false
+				end
+				if needSwap then
+					if existing then
+						existing:Destroy()
+					end
+					local clone = ModelCatalog.Clone(modelName)
+					if clone then
+						clone.Name = "Asset_PlantVisual"
+						clone:SetAttribute("ModelName", modelName)
+						ModelCatalog.AnchorAll(clone)
+						clone.Parent = soil
+						local height = 0.8 + (progress or 0) * 1.4
+						local cf = soil.CFrame * CFrame.new(0, soil.Size.Y / 2, 0)
+						ModelCatalog.PivotTo(clone, cf)
+						-- Scale approx by progress for seedling→mature feel when same mesh reused
+						if clone:IsA("Model") then
+							clone:ScaleTo(math.clamp(0.55 + (progress or 0) * 0.55, 0.5, 1.15))
+						end
+						existing = clone
+					end
+				elseif existing and existing:IsA("Model") then
+					existing:ScaleTo(math.clamp(0.55 + (progress or 0) * 0.55, 0.5, 1.15))
+					ModelCatalog.PivotTo(existing, soil.CFrame * CFrame.new(0, soil.Size.Y / 2, 0))
+				end
+				if existing then
+					return
+				end
+			end
+
+			-- Placeholder Part fallback (no imported mesh yet)
+			local visual: BasePart
+			if existing and existing:IsA("BasePart") then
+				visual = existing
+			else
+				if existing then
+					existing:Destroy()
+				end
 				visual = Instance.new("Part")
 				visual.Name = "Asset_PlantVisual"
 				visual.Anchored = true

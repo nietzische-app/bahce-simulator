@@ -140,7 +140,7 @@ function PlantService.SyncVisuals(player: Player, data: Types.PlayerData)
 			local seed = Seeds.Get(plant.seedId)
 			if seed then
 				local progress, ready = PlantService.GetProgress(plant, data)
-				PlotService.UpdatePlantVisual(primary, s, seed.color, progress, ready)
+				PlotService.UpdatePlantVisual(primary, s, seed.color, progress, ready, seed.id)
 			end
 		else
 			PlotService.UpdatePlantVisual(primary, s, nil)

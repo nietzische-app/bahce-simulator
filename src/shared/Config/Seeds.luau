@@ -17,6 +17,8 @@ local Seeds: { [string]: Types.SeedConfig } = {
 		buyPrice = 5,
 		color = Color3.fromRGB(255, 214, 90),
 		assetId = "PLACEHOLDER_SunBloom",
+		modelSeedling = "SunBloom_seedling",
+		modelMature = "SunBloom_mature",
 	},
 	DewLeaf = {
 		id = "DewLeaf",
@@ -27,6 +29,8 @@ local Seeds: { [string]: Types.SeedConfig } = {
 		buyPrice = 8,
 		color = Color3.fromRGB(120, 200, 140),
 		assetId = "PLACEHOLDER_DewLeaf",
+		modelSeedling = "DewLeaf_seedling",
+		modelMature = "DewLeaf_mature",
 	},
 	CloudBerry = {
 		id = "CloudBerry",
@@ -37,6 +41,8 @@ local Seeds: { [string]: Types.SeedConfig } = {
 		buyPrice = 18,
 		color = Color3.fromRGB(180, 220, 255),
 		assetId = "PLACEHOLDER_CloudBerry",
+		modelSeedling = "CloudBerry_seedling",
+		modelMature = "CloudBerry_mature",
 	},
 	MoonPetal = {
 		id = "MoonPetal",
@@ -47,6 +53,8 @@ local Seeds: { [string]: Types.SeedConfig } = {
 		buyPrice = 45,
 		color = Color3.fromRGB(200, 180, 255),
 		assetId = "PLACEHOLDER_MoonPetal",
+		modelSeedling = "MoonPetal_seedling",
+		modelMature = "MoonPetal_mature",
 	},
 	StarRoot = {
 		id = "StarRoot",
@@ -57,6 +65,8 @@ local Seeds: { [string]: Types.SeedConfig } = {
 		buyPrice = 100,
 		color = Color3.fromRGB(255, 160, 220),
 		assetId = "PLACEHOLDER_StarRoot",
+		modelSeedling = "StarRoot_seedling",
+		modelMature = "StarRoot_mature",
 	},
 }
 

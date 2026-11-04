@@ -2,7 +2,7 @@
 
 Çocuklara uygun, orijinal temalı bir Roblox bahçe simülatörü MVP’si. Tohum ek, büyümesini bekle (çevrimdışı zaman damgası ile), hasat et, dükkândan sat / yükselt. Grow a Garden tarzı döngü; meme/şaka yok, sakin ve güvenli.
 
-> Bu depo bir **Rojo** projesidir. Görseller şu an adlandırılmış **placeholder Part**’lardır; sonra Studio / AI asset’leri ile değiştirilecektir.
+> Bu depo bir **Rojo** projesidir. `assets/models/*.fbx` AI art pass mesh’leridir; Studio’ya import edilince kod placeholder Part yerine bunları kullanır.
 
 ## Özellikler
 
@@ -87,6 +87,45 @@ ID’ler `0` iken istemci “yapılandırılmadı” uyarısı gösterir; gerçe
 - Roblox [Experience Guidelines](https://create.roblox.com/docs/production/experience-guidelines) / maturity anketini doğru doldur (yaş uygunluğu).
 - ABD’de çocuklara yönelik hizmetler için [COPPA](https://www.ftc.gov/business-guidance/privacy-security/childrens-privacy) ve Roblox ebeveyn / hesap kurallarına uy.
 - Chat’i gerekirse deneyim ayarlarından kısıtla; üçüncü taraf link paylaşma.
+
+
+## 3D asset import (Studio)
+
+Kaynak dosyalar: `assets/models/*.fbx` (ve isteğe bağlı `.obj`). Önizleme: `shots/art_contact_sheet.png`.
+
+### Toplu import
+
+1. Roblox Studio’da File → **3D Importer** (veya Avatar → 3D Importer) ile tek tek FBX seç **veya**
+2. **Asset Manager** → Bulk Import ile `assets/models/` klasöründeki FBX’leri yükle.
+3. Import ayarları: Scale unit = studs / meters uyumlu; texture’ları gömülü bırak.
+4. Ortaya çıkan Model / MeshPart’ları **ReplicatedStorage → Models** altına taşı ve **dosya adıyla aynı** isim ver:
+
+| Dosya | ReplicatedStorage yolu |
+|-------|------------------------|
+| `SunBloom_seedling.fbx` | `ReplicatedStorage/Models/SunBloom_seedling` |
+| `SunBloom_mature.fbx` | `ReplicatedStorage/Models/SunBloom_mature` |
+| `DewLeaf_*` / `CloudBerry_*` / `MoonPetal_*` / `StarRoot_*` | aynı kural |
+| `GardenPlot.fbx` | `ReplicatedStorage/Models/GardenPlot` |
+| `SeedShopStall.fbx` | `ReplicatedStorage/Models/SeedShopStall` |
+| `SellStand.fbx` | `ReplicatedStorage/Models/SellStand` |
+
+5. Oyun çalışınca `PlotService` / `ModelCatalog` mesh varsa klonlar; yoksa renkli Part placeholder kalır.
+
+### Art pipeline (yeniden üret)
+
+```bash
+# 1) Referans görseller (HF ZeroGPU / Z-Image; kota yoksa --prompts-only)
+python art/gen_refs.py
+
+# 2) Image→3D: ücretsiz TRELLIS (örn. three.ws / HF Spaces), GLB’yi assets/models/raw/ altına koy
+
+# 3) Blender temizlik + FBX (<5k tri)
+blender --background --python art/blender/cleanup_export.py -- \
+  --input-dir assets/models/raw --output-dir assets/models \
+  --max-tris 5000 --contact-sheet shots/art_contact_sheet.png
+```
+
+`Blender` yalnızca cleanup / decimate / scale / material / export içindir; final mesh AI image→3D’den gelir.
 
 ## CI
 
