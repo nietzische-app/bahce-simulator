@@ -187,7 +187,10 @@ def render_contact_sheet(fbx_paths: list[Path], out_png: Path, size: int):
 
     clear_scene()
     scene = bpy.context.scene
-    scene.render.engine = "BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in dir(bpy.types.RenderSettings) else "BLENDER_EEVEE"
+    try:
+        scene.render.engine = "BLENDER_EEVEE_NEXT"
+    except Exception:
+        scene.render.engine = "BLENDER_EEVEE"
     # Flat friendly lighting
     world = bpy.data.worlds.new("FlatWorld")
     scene.world = world
@@ -263,7 +266,16 @@ def main():
     for path in inputs:
         name = args.name if (args.name and len(inputs) == 1) else path.stem
         out_fbx = Path(args.output) if (args.output and len(inputs) == 1) else out_dir / f"{name}.fbx"
-        name, tris = process_one(path, out_fbx, name, args.max_tris, args.target_height, args.also_obj)
+        height = args.target_height
+        low = name.lower()
+        if "seedling" in low:
+            height = min(height, 1.2)
+        elif any(k in low for k in ("stall", "stand", "shop")):
+            height = max(height, 3.5)
+        elif "plot" in low or "garden" in low:
+            height = max(height, 1.0)
+            height = min(height, 1.5)
+        name, tris = process_one(path, out_fbx, name, args.max_tris, height, args.also_obj)
         results.append((out_fbx, tris))
 
     if args.contact_sheet:
