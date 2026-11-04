@@ -98,16 +98,47 @@ def ground_and_scale(obj, target_height: float):
 def decimate(obj, max_tris: int):
     import bpy
 
+    # Collapse can stall on dense scanned rocks; fall back to voxel remesh.
+    for i in range(8):
+        mesh = obj.data
+        mesh.calc_loop_triangles()
+        tris = len(mesh.loop_triangles)
+        if tris <= max_tris:
+            return tris
+        prev = tris
+        mod = obj.modifiers.new(f"DecimateArtPass{i}", "DECIMATE")
+        mod.decimate_type = "COLLAPSE"
+        mod.ratio = max(0.15, min(0.5, max_tris / max(tris, 1)))
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.modifier_apply(modifier=mod.name)
+        mesh.calc_loop_triangles()
+        if len(mesh.loop_triangles) >= prev * 0.95:
+            break
     mesh = obj.data
     mesh.calc_loop_triangles()
-    tris = len(mesh.loop_triangles)
-    if tris <= max_tris:
-        return tris
-    ratio = max(0.02, max_tris / max(tris, 1))
-    mod = obj.modifiers.new("DecimateArtPass", "DECIMATE")
-    mod.ratio = ratio
+    if len(mesh.loop_triangles) <= max_tris:
+        return len(mesh.loop_triangles)
+    # Voxel remesh then collapse to budget
+    bbox = obj.bound_box
+    xs = [v[0] for v in bbox]
+    ys = [v[1] for v in bbox]
+    zs = [v[2] for v in bbox]
+    extent = max(max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs), 0.5)
+    voxel = max(0.02, extent / 28.0)
+    rem = obj.modifiers.new("VoxelArtPass", "REMESH")
+    rem.mode = "VOXEL"
+    rem.voxel_size = voxel
     bpy.context.view_layer.objects.active = obj
-    bpy.ops.object.modifier_apply(modifier=mod.name)
+    bpy.ops.object.modifier_apply(modifier=rem.name)
+    for i in range(8):
+        mesh = obj.data
+        mesh.calc_loop_triangles()
+        tris = len(mesh.loop_triangles)
+        if tris <= max_tris:
+            return tris
+        mod = obj.modifiers.new(f"DecimateVoxel{i}", "DECIMATE")
+        mod.ratio = max(0.15, min(0.5, max_tris / max(tris, 1)))
+        bpy.ops.object.modifier_apply(modifier=mod.name)
     mesh.calc_loop_triangles()
     return len(mesh.loop_triangles)
 

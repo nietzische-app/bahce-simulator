@@ -1,5 +1,6 @@
 --!strict
 local Types = require(script.Parent.Parent.Core.Types)
+local Icons = require(script.Parent.Icons)
 
 export type SeedConfig = Types.SeedConfig
 
@@ -16,7 +17,7 @@ local Seeds: { [string]: Types.SeedConfig } = {
 		sellPrice = 8,
 		buyPrice = 5,
 		color = Color3.fromRGB(255, 214, 90),
-		assetId = "PLACEHOLDER_SunBloom",
+		assetId = Icons.ForSeed("SunBloom") or "PLACEHOLDER_SunBloom",
 		modelSeedling = "SunBloom_seedling",
 		modelMature = "SunBloom_mature",
 	},
@@ -28,7 +29,7 @@ local Seeds: { [string]: Types.SeedConfig } = {
 		sellPrice = 12,
 		buyPrice = 8,
 		color = Color3.fromRGB(120, 200, 140),
-		assetId = "PLACEHOLDER_DewLeaf",
+		assetId = Icons.ForSeed("DewLeaf") or "PLACEHOLDER_DewLeaf",
 		modelSeedling = "DewLeaf_seedling",
 		modelMature = "DewLeaf_mature",
 	},
@@ -40,7 +41,7 @@ local Seeds: { [string]: Types.SeedConfig } = {
 		sellPrice = 28,
 		buyPrice = 18,
 		color = Color3.fromRGB(180, 220, 255),
-		assetId = "PLACEHOLDER_CloudBerry",
+		assetId = Icons.ForSeed("CloudBerry") or "PLACEHOLDER_CloudBerry",
 		modelSeedling = "CloudBerry_seedling",
 		modelMature = "CloudBerry_mature",
 	},
@@ -52,7 +53,7 @@ local Seeds: { [string]: Types.SeedConfig } = {
 		sellPrice = 70,
 		buyPrice = 45,
 		color = Color3.fromRGB(200, 180, 255),
-		assetId = "PLACEHOLDER_MoonPetal",
+		assetId = Icons.ForSeed("MoonPetal") or "PLACEHOLDER_MoonPetal",
 		modelSeedling = "MoonPetal_seedling",
 		modelMature = "MoonPetal_mature",
 	},
@@ -64,7 +65,7 @@ local Seeds: { [string]: Types.SeedConfig } = {
 		sellPrice = 160,
 		buyPrice = 100,
 		color = Color3.fromRGB(255, 160, 220),
-		assetId = "PLACEHOLDER_StarRoot",
+		assetId = Icons.ForSeed("StarRoot") or "PLACEHOLDER_StarRoot",
 		modelSeedling = "StarRoot_seedling",
 		modelMature = "StarRoot_mature",
 	},

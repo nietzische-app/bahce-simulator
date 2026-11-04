@@ -1,34 +1,17 @@
-# Studio FBX models (art pass 1)
+# Studio FBX / OBJ models
 
-Import these into Roblox Studio → **ReplicatedStorage/Models/<stem>**.
+Import into Roblox Studio → **ReplicatedStorage/Models/<stem>**. See `docs/STUDIO_FBX_IMPORT_TR.md`.
 
-| File | Role |
-|------|------|
-| SunBloom_seedling.fbx / SunBloom_mature.fbx | Tohum büyüme |
-| DewLeaf_seedling.fbx / DewLeaf_mature.fbx | Tohum büyüme |
-| CloudBerry_seedling.fbx / CloudBerry_mature.fbx | Tohum büyüme |
-| MoonPetal_seedling.fbx / MoonPetal_mature.fbx | Tohum büyüme |
-| StarRoot_seedling.fbx / StarRoot_mature.fbx | Tohum büyüme |
-| GardenPlot.fbx | Bahçe toprak yatağı |
-| SeedShopStall.fbx | Tohum dükkanı |
-| SellStand.fbx | Satış tezgâhı |
+## Crops / hub (art pass 1)
+SunBloom/DewLeaf/CloudBerry/MoonPetal/StarRoot (`_seedling` + `_mature`), GardenPlot, SeedShopStall, SellStand.
 
-Kaynak: AI referans (`assets/refs`) → free TRELLIS image→3D (`assets/models/raw/*.glb`) → Blender cleanup (`art/blender/cleanup_export.py`) → FBX (<5k tri).
-Önizleme: `shots/art_contact_sheet.png`.
+## Decor / pet / gear (art pass 2)
+Decor_Bench, Decor_Fence, Decor_FlowerPot, Decor_Gnome, Decor_Lantern, Sprinkler, Pet_Fox.
 
-## Dekor / pet / sprinkler (art pass 2)
+## World fill (art pass 3 — map looks filled)
+WorldTree, WorldRock, WorldRocks, WorldFlowerA/B/C, WorldFern, WorldLog.
 
-| File | Tris (hedef <5k) | Kaynak |
-|------|------------------|--------|
-| Decor_Bench.fbx | ~630 | Poly Haven CC0 |
-| Decor_FlowerPot.fbx | ~3080 | Poly Haven CC0 |
-| Decor_Gnome.fbx | ~5000 | Poly Haven CC0 |
-| Decor_Lantern.fbx | ~4999 | Poly Haven CC0 |
-| Decor_Fence.fbx | ~4999 | Poly Haven CC0 (chainlink) |
-| Sprinkler.fbx | ~5000 | Poly Haven CC0 |
-| Pet_Fox.fbx | ~576 | Khronos Fox CC-BY |
+## Deferred (tomorrow)
+Pet_Bunny, Pet_Chick, Pet_Frog, Pet_Owl, Pet_Hedgehog, Pet_Dragon, Decor_Fountain, Decor_Birdhouse, Decor_Swing.
 
-Eksik (HF ZeroGPU / TRELLIS bekliyor): Pet_Bunny, Pet_Chick, Pet_Frog, Pet_Owl, Pet_Hedgehog, Pet_Dragon, Decor_Fountain, Decor_Birdhouse, Decor_Swing.
-
-Import: `docs/STUDIO_FBX_IMPORT_TR.md`. Pipeline: `scripts/art/gen_and_convert.sh`. Önizleme: `/workspace/art_preview.png` (repo dışı kopya `shots/` altına da alınabilir).
-
+Credits: `assets/CREDITS.md`. Pipeline: `scripts/art/gen_and_convert.sh`.

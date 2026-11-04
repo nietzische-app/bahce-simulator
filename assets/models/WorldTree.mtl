@@ -1,0 +1,35 @@
+# Blender 4.5.15 LTS MTL File: 'None'
+# www.blender.org
+
+newmtl fir_sapling_medium_branches
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.023383 0.023383 0.023383
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd -s 1.2 0.099999934 1 fir_sapling_medium_branches_diff_1k.jpg
+map_Bump -s 1.2 0.099999934 1 -bm 1.000000 fir_sapling_medium_branches_nor_gl_1k.jpg
+
+newmtl fir_sapling_medium_branches_dead
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd -s 0.8 0.8 1 fir_sapling_medium_branches_diff_1k.jpg
+map_Bump -s 0.8 0.8 1 -bm 1.000000 fir_sapling_medium_branches_nor_gl_1k.jpg
+
+newmtl fir_sapling_medium_twigs
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.022388 0.022388 0.022388
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+illum 2
+map_Kd fir_sapling_medium_twigs_diff_1k.jpg
+map_d fir_sapling_medium_twigs_diff_1k.jpg
+map_Bump -bm 1.000000 fir_sapling_medium_twigs_nor_gl_1k.jpg

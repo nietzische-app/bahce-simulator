@@ -1,0 +1,17 @@
+# Paste Studio Asset Manager numeric IDs after bulk upload.
+# Format: KEY=NUMBER
+# Then copy into src/shared/Config/Icons.luau
+Seed_SunBloom=
+Seed_DewLeaf=
+Seed_CloudBerry=
+Seed_MoonPetal=
+Seed_StarRoot=
+World_GardenPlot=
+World_SeedShop=
+World_SellStand=
+Pet_Bunny=
+Pet_Chick=
+Pet_Frog=
+Pet_Fox=
+Pet_Owl=
+Pet_Hedgehog=

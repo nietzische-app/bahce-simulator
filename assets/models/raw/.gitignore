@@ -1,1 +1,4 @@
 *.glb
+# Large world source packs (>10MB) — keep cleaned FBX/OBJ only
+_poly_WorldSapling/
+_poly_WorldRocks/

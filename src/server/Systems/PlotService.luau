@@ -9,6 +9,7 @@ local GameConfig = require(game.ReplicatedStorage.Shared.Config.Game)
 local ModelCatalog = require(game.ReplicatedStorage.Shared.Core.ModelCatalog)
 local Seeds = require(game.ReplicatedStorage.Shared.Config.Seeds)
 local Decor = require(game.ReplicatedStorage.Shared.Config.Decor)
+local WorldLayout = require(game.ReplicatedStorage.Shared.Config.WorldLayout)
 
 local PlotService = {}
 
@@ -168,26 +169,45 @@ function PlotService.TrySpawnWorldProps()
 	folder.Name = "WorldProps"
 	folder.Parent = Workspace
 
-	local props = {
-		{ name = "GardenPlot", cframe = CFrame.new(0, 0, 28) },
-		{ name = "SeedShopStall", cframe = CFrame.new(-28, 0, 0) },
-		{ name = "SellStand", cframe = CFrame.new(28, 0, 0) },
-	}
-	for _, spec in props do
+	-- Dirt paths (Part strips; texture upload optional later)
+	local pathsFolder = Instance.new("Folder")
+	pathsFolder.Name = "Paths"
+	pathsFolder.Parent = folder
+	for i, path in WorldLayout.Paths do
+		local part = Instance.new("Part")
+		part.Name = string.format("Asset_Path_%02d", i)
+		part.Anchored = true
+		part.CanCollide = true
+		part.Material = Enum.Material.Ground
+		part.Color = Color3.fromRGB(120, 90, 55)
+		part.Size = Vector3.new(path.sizeX, 0.35, path.sizeZ)
+		local yaw = math.rad(path.yawDegrees or 0)
+		part.CFrame = CFrame.new(path.x, 0.1, path.z) * CFrame.Angles(0, yaw, 0)
+		part.TopSurface = Enum.SurfaceType.Smooth
+		part.Parent = pathsFolder
+	end
+
+	local spawned = 0
+	local missing = 0
+	for _, spec in WorldLayout.AllProps() do
+		local yaw = math.rad(spec.yawDegrees or 0)
+		local cframe = CFrame.new(spec.x, spec.y, spec.z) * CFrame.Angles(0, yaw, 0)
 		local clone = ModelCatalog.Clone(spec.name)
 		if clone then
 			ModelCatalog.AnchorAll(clone)
-			ModelCatalog.PivotTo(clone, spec.cframe)
+			ModelCatalog.PivotTo(clone, cframe)
 			clone.Parent = folder
+			spawned += 1
 		else
+			missing += 1
 			-- Named placeholder so Studio art can replace later
 			local marker = Instance.new("Part")
 			marker.Name = "Asset_" .. spec.name
-			marker.Size = Vector3.new(6, 1, 6)
+			marker.Size = Vector3.new(4, 1, 4)
 			marker.Anchored = true
 			marker.Color = Color3.fromRGB(180, 160, 120)
 			marker.Material = Enum.Material.Wood
-			marker.CFrame = spec.cframe * CFrame.new(0, 0.5, 0)
+			marker.CFrame = cframe * CFrame.new(0, 0.5, 0)
 			marker.Parent = folder
 			local bb = Instance.new("BillboardGui")
 			bb.Size = UDim2.fromOffset(160, 28)
@@ -204,6 +224,13 @@ function PlotService.TrySpawnWorldProps()
 			label.Parent = bb
 		end
 	end
+	print(
+		string.format(
+			"[PlotService] WorldProps spawned=%d missing=%d (import FBX → ReplicatedStorage.Models)",
+			spawned,
+			missing
+		)
+	)
 end
 
 function PlotService.GetPlots(): { PlotInfo }
