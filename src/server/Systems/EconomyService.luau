@@ -5,6 +5,7 @@ local Monetization = require(game.ReplicatedStorage.Shared.Config.Monetization)
 local Types = require(game.ReplicatedStorage.Shared.Core.Types)
 local Mutations = require(game.ReplicatedStorage.Shared.Config.Mutations)
 local WeatherService = require(script.Parent.WeatherService)
+local QuestService = require(script.Parent.QuestService)
 
 local EconomyService = {}
 
@@ -45,6 +46,7 @@ function EconomyService.SellAllCrops(data: Types.PlayerData): (boolean, string, 
 	end
 	data.coins += total
 	data.totalEarned += total
+	QuestService.Track(data, "sell", total)
 	return true, string.format("%d ürün satıldı: +%d coin", sold, total), total
 end
 

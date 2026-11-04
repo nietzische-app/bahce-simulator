@@ -26,6 +26,7 @@ export type HudHandles = {
 	setWeather: (any) -> (),
 	toggleInventory: () -> (),
 	toggleShop: () -> (),
+	refreshQuests: (state: any, onClaim: (number) -> ()) -> (),
 }
 
 local function corner(parent: Instance, radius: number?)
@@ -132,8 +133,8 @@ function MainHud.Create(handlers: {
 	-- Side actions
 	local side = Instance.new("Frame")
 	side.Name = "SideActions"
-	side.Size = UDim2.new(0, 140, 0, 160)
-	side.Position = UDim2.new(1, -150, 0.5, -80)
+	side.Size = UDim2.new(0, 140, 0, 208)
+	side.Position = UDim2.new(1, -150, 0.5, -104)
 	side.BackgroundTransparency = 1
 	side.Parent = gui
 
@@ -144,6 +145,7 @@ function MainHud.Create(handlers: {
 	local btnSell = makeButton("Ürünleri Sat", side, UDim2.new(1, 0, 0, 40), nil, Color3.fromRGB(180, 140, 40))
 	local btnDaily = makeButton("Günlük Ödül", side, UDim2.new(1, 0, 0, 40), nil, Color3.fromRGB(80, 140, 180))
 	local btnBoard = makeButton("Sıralama", side, UDim2.new(1, 0, 0, 40), nil, Color3.fromRGB(100, 80, 160))
+	local btnQuests = makeButton("Görevler", side, UDim2.new(1, 0, 0, 40), nil, Color3.fromRGB(70, 130, 110))
 
 	btnSell.MouseButton1Click:Connect(handlers.onSell)
 	btnDaily.MouseButton1Click:Connect(handlers.onDaily)
@@ -228,6 +230,43 @@ function MainHud.Create(handlers: {
 	shopLayout.Padding = UDim.new(0, 6)
 	shopLayout.Parent = shopList
 
+	-- Quests + daily calendar panel
+	local questFrame = Instance.new("Frame")
+	questFrame.Name = "Quests"
+	questFrame.Size = UDim2.new(0, 340, 0, 400)
+	questFrame.Position = UDim2.new(0.5, -170, 0.5, -200)
+	questFrame.BackgroundColor3 = Color3.fromRGB(35, 50, 45)
+	questFrame.Visible = false
+	questFrame.Parent = gui
+	corner(questFrame, 12)
+	padding(questFrame, 10)
+	local questList = Instance.new("ScrollingFrame")
+	questList.Name = "List"
+	questList.Size = UDim2.new(1, 0, 1, 0)
+	questList.BackgroundTransparency = 1
+	questList.ScrollBarThickness = 6
+	questList.CanvasSize = UDim2.new(0, 0, 0, 0)
+	questList.Parent = questFrame
+	local questLayout = Instance.new("UIListLayout")
+	questLayout.Padding = UDim.new(0, 6)
+	questLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	questLayout.Parent = questList
+
+	local function quietLabel(parent: Instance, text: string, h: number, order: number, bold: boolean?)
+		local t = Instance.new("TextLabel")
+		t.Size = UDim2.new(1, -8, 0, h)
+		t.BackgroundTransparency = 1
+		t.Text = text
+		t.TextWrapped = true
+		t.TextScaled = true
+		t.Font = if bold then Enum.Font.GothamBold else Enum.Font.Gotham
+		t.TextColor3 = if bold then Color3.fromRGB(220, 220, 180) else Color3.fromRGB(190, 200, 195)
+		t.TextXAlignment = Enum.TextXAlignment.Left
+		t.LayoutOrder = order
+		t.Parent = parent
+		return t
+	end
+
 	local selectedSeed: string? = nil
 
 	local handles: HudHandles
@@ -276,6 +315,76 @@ function MainHud.Create(handlers: {
 					eventBanner.Visible = false
 				end
 			end
+		end,
+		refreshQuests = function(state: any, onClaim: (number) -> ())
+			for _, child in questList:GetChildren() do
+				if child:IsA("GuiObject") then
+					child:Destroy()
+				end
+			end
+			local y, order = 0, 0
+			local function nextOrder()
+				order += 1
+				return order
+			end
+			quietLabel(questList, "Bugünün Görevleri", 26, nextOrder(), true)
+			y += 32
+			for i, q in state.quests or {} do
+				local done = q.progress >= q.target
+				local text = string.format(
+					"%s  (%d/%d)  — %d coin%s",
+					q.text,
+					math.floor(q.progress),
+					q.target,
+					q.rewardCoins,
+					if q.claimed then "  ✓" elseif done then "  [Ödülü Al]" else ""
+				)
+				local row = makeButton(
+					text,
+					questList,
+					UDim2.new(1, -8, 0, 36),
+					nil,
+					if q.claimed
+						then Color3.fromRGB(70, 80, 75)
+						elseif done then Color3.fromRGB(60, 140, 90)
+						else Color3.fromRGB(55, 75, 70)
+				)
+				row.LayoutOrder = nextOrder()
+				if done and not q.claimed then
+					row.MouseButton1Click:Connect(function()
+						onClaim(i)
+					end)
+				end
+				y += 42
+			end
+			quietLabel(questList, "Görevler her gün (UTC) yenilenir. Kaçırırsan sorun yok!", 20, nextOrder())
+			y += 26
+			local daily = state.daily
+			if typeof(daily) == "table" then
+				quietLabel(questList, "Günlük Ödül Takvimi", 26, nextOrder(), true)
+				y += 32
+				for d, r in daily.days or {} do
+					local mark = if d == daily.nextDay
+						then (if daily.canClaim then "  ← bugün" else "  ← yarın")
+						else ""
+					local seedTxt = if r.seed then string.format(" + %dx %s", r.seedCount or 1, r.seed) else ""
+					quietLabel(
+						questList,
+						string.format("Gün %d: %d coin%s%s", d, r.coins, seedTxt, mark),
+						22,
+						nextOrder()
+					)
+					y += 28
+				end
+				quietLabel(
+					questList,
+					"Bir gün kaçırırsan Gün 1'den devam edersin; hiçbir şey kaybolmaz.",
+					20,
+					nextOrder()
+				)
+				y += 26
+			end
+			questList.CanvasSize = UDim2.new(0, 0, 0, y + 8)
 		end,
 		toggleInventory = function()
 			inventoryFrame.Visible = not inventoryFrame.Visible
@@ -349,18 +458,42 @@ function MainHud.Create(handlers: {
 			end
 
 			addSection("Tohumlar")
+			local stock = state.stock or {}
+			local items = stock.items or {}
 			for _, seed in state.seeds or {} do
+				local left = items[seed.id]
+				local stockTxt = if left == nil or left < 0
+					then ""
+					elseif left == 0 then "  (rafta yok)"
+					else string.format("  (rafta %d)", left)
 				local row = makeButton(
-					string.format("%s — %d coin  [%s]", seed.displayName, seed.buyPrice, seed.rarity),
+					string.format("%s — %d coin  [%s]%s", seed.displayName, seed.buyPrice, seed.rarity, stockTxt),
 					shopList,
 					UDim2.new(1, -8, 0, 36),
 					nil,
-					Color3.fromRGB(70, 110, 80)
+					if left == 0 then Color3.fromRGB(80, 85, 80) else Color3.fromRGB(70, 110, 80)
 				)
-				row.MouseButton1Click:Connect(function()
-					shopHandlers.buySeed(seed.id, 1)
-				end)
+				if left ~= 0 then
+					row.MouseButton1Click:Connect(function()
+						shopHandlers.buySeed(seed.id, 1)
+					end)
+				end
 				y += 42
+			end
+			if stock.secondsLeft then
+				local info = Instance.new("TextLabel")
+				info.Size = UDim2.new(1, -8, 0, 20)
+				info.BackgroundTransparency = 1
+				info.TextScaled = true
+				info.Font = Enum.Font.Gotham
+				info.TextColor3 = Color3.fromRGB(170, 170, 160)
+				info.TextXAlignment = Enum.TextXAlignment.Left
+				info.Text = string.format(
+					"Raflar yaklaşık %d dk içinde tazelenir. Her tohum mutlaka tekrar gelir.",
+					math.max(1, math.ceil(stock.secondsLeft / 60))
+				)
+				info.Parent = shopList
+				y += 26
 			end
 
 			addSection("Mutasyon Oranları (hasat başına)")
@@ -452,6 +585,9 @@ function MainHud.Create(handlers: {
 	}
 
 	btnInv.MouseButton1Click:Connect(handles.toggleInventory)
+	btnQuests.MouseButton1Click:Connect(function()
+		questFrame.Visible = not questFrame.Visible
+	end)
 	btnShop.MouseButton1Click:Connect(handles.toggleShop);
 	(handles :: any).GetSelectedSeed = function(): string?
 		return (handles :: any)._selectedSeed

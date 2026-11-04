@@ -9,6 +9,7 @@ local Types = require(game.ReplicatedStorage.Shared.Core.Types)
 local Mutations = require(game.ReplicatedStorage.Shared.Config.Mutations)
 local WeatherService = require(script.Parent.WeatherService)
 local PlotService = require(script.Parent.PlotService)
+local QuestService = require(script.Parent.QuestService)
 
 local PlantService = {}
 
@@ -74,6 +75,7 @@ function PlantService.Plant(data: Types.PlayerData, seedId: string, slotIndex: n
 		plantedAt = os.time(),
 		slotIndex = slotIndex,
 	})
+	QuestService.Track(data, "plant", 1)
 	return true, seed.displayName .. " ekildi!"
 end
 
@@ -99,7 +101,9 @@ function PlantService.Harvest(data: Types.PlayerData, slotIndex: number): (boole
 	local cropKey = Mutations.CropKey(seed.id, mutationId)
 	data.inventory[cropKey] = (data.inventory[cropKey] or 0) + 1
 	local mut = Mutations.Get(mutationId)
+	QuestService.Track(data, "harvest", 1)
 	if mut then
+		QuestService.Track(data, "mutated", 1)
 		return true,
 			string.format("%s %s hasat edildi! (x%d değer)", mut.displayName, seed.displayName, mut.multiplier),
 			seed.sellPrice * mut.multiplier

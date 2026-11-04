@@ -22,6 +22,8 @@ local Mutations = require(game.ReplicatedStorage.Shared.Config.Mutations)
 local LeaderboardService = require(script.Parent.LeaderboardService)
 local DailyRewardService = require(script.Parent.DailyRewardService)
 local MonetizationService = require(script.Parent.MonetizationService)
+local StockService = require(script.Parent.StockService)
+local QuestService = require(script.Parent.QuestService)
 
 local GameService = {}
 
@@ -44,6 +46,9 @@ local function buildState(player: Player, data: any)
 		ownedGamepasses = data.ownedGamepasses,
 		maxSlots = PlantService.MaxSlots(data),
 		canClaimDaily = DailyRewardService.CanClaim(data),
+		daily = DailyRewardService.Serialize(data),
+		quests = QuestService.Serialize(data),
+		stock = StockService.Snapshot(player.UserId, os.time()),
 		weather = WeatherService.GetState(),
 		seeds = Seeds.ListOrdered(),
 		shop = {
@@ -149,6 +154,7 @@ local function onPlayerRemoving(player: Player)
 	PlotService.ReleasePlots(player.UserId)
 	store:Release(player)
 	limiter:ClearPlayer(player)
+	StockService.ClearPlayer(player.UserId)
 end
 
 function GameService.Init()
@@ -208,7 +214,7 @@ function GameService.Init()
 			amount = 1
 		end
 		withProfile(player, "buy", function(profile)
-			local ok, msg = EconomyService.BuySeed(profile.Data, seedId, amount)
+			local ok, msg = StockService.Buy(profile.Data, player.UserId, seedId, amount, EconomyService.BuySeed)
 			notify(player, msg, if ok then "ok" else "warn")
 			pushState(player)
 		end)
@@ -230,6 +236,17 @@ function GameService.Init()
 			local ok, msg = DailyRewardService.Claim(profile.Data)
 			notify(player, msg, if ok then "ok" else "warn")
 			LeaderboardService.UpdateCoins(player.UserId, profile.Data.coins)
+			pushState(player)
+		end)
+	end)
+
+	Remotes.Event("ClaimQuest").OnServerEvent:Connect(function(player, index)
+		if typeof(index) ~= "number" then
+			return
+		end
+		withProfile(player, "quest", function(profile)
+			local ok, msg = QuestService.Claim(profile.Data, index)
+			notify(player, msg, if ok then "ok" else "warn")
 			pushState(player)
 		end)
 	end)
@@ -276,6 +293,19 @@ function GameService.Init()
 	for _, p in Players:GetPlayers() do
 		task.spawn(onPlayerAdded, p)
 	end
+
+	-- Free shop restock every Shop.RESTOCK_SECONDS (no Robux restock)
+	StockService.Tick(os.time())
+	task.spawn(function()
+		while true do
+			task.wait(1)
+			if StockService.Tick(os.time()) then
+				for _, p in Players:GetPlayers() do
+					pushState(p)
+				end
+			end
+		end
+	end)
 
 	-- Periodic leaderboard refresh for online players
 	task.spawn(function()

@@ -16,6 +16,7 @@ local EVENT_NAMES = {
 	"BuySeed",
 	"BuyUpgrade",
 	"ClaimDaily",
+	"ClaimQuest",
 	"RequestState",
 	"StateUpdate",
 	"Notify",

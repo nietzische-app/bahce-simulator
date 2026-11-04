@@ -4,7 +4,7 @@
 	Keep sim-agnostic where possible so other sims can reuse Core.
 ]]
 
-export type Rarity = "Common" | "Uncommon" | "Rare" | "Epic"
+export type Rarity = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary"
 
 export type SeedConfig = {
 	id: string,
@@ -48,6 +48,8 @@ export type PlayerData = {
 	lastDailyClaim: number, -- unix day index or timestamp
 	totalHarvested: number,
 	totalEarned: number,
+	dailyStreak: number?, -- last claimed calendar day (1..7)
+	quests: any?, -- { day: number, list: { {id, progress, claimed} } }
 	goldenPity: number?, -- harvests since last Golden/Rainbow mutation
 	plotIndex: number?, -- assigned plot (persisted preference)
 	sessionLockId: string?,
