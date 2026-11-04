@@ -12,6 +12,64 @@ local state = {
 	weekKey = "",
 }
 
+-- Short server-wide event (not persisted; per-server)
+local short = {
+	eventId = nil :: string?,
+	endsAt = 0,
+}
+local listeners: { () -> () } = {}
+
+local function fireChanged()
+	for _, cb in listeners do
+		task.spawn(cb)
+	end
+end
+
+function WeatherService.OnChanged(cb: () -> ())
+	table.insert(listeners, cb)
+end
+
+-- Exposed for tests / Studio debugging (server only)
+function WeatherService.StartShortEvent(id: string, duration: number, now: number?)
+	if not WeatherConfig.GetShort(id) then
+		return false
+	end
+	short.eventId = id
+	short.endsAt = (now or os.time()) + duration
+	fireChanged()
+	return true
+end
+
+function WeatherService.EndShortEvent()
+	short.eventId = nil
+	short.endsAt = 0
+	fireChanged()
+end
+
+function WeatherService.GetShortEvent(now: number?): WeatherConfig.ShortEvent?
+	if short.eventId and (now or os.time()) < short.endsAt then
+		return WeatherConfig.GetShort(short.eventId)
+	end
+	return nil
+end
+
+function WeatherService.MutationBoosts(now: number?): { [string]: number }
+	local ev = WeatherService.GetShortEvent(now)
+	return if ev then ev.mutationBoosts else {}
+end
+
+local function shortEventLoop()
+	local rng = Random.new()
+	while true do
+		task.wait(WeatherConfig.NextGap(rng))
+		local ev, dur = WeatherConfig.PickShortEvent(rng)
+		WeatherService.StartShortEvent(ev.id, dur)
+		print("[WeatherService] Short event:", ev.id, dur)
+		task.wait(dur)
+		WeatherService.EndShortEvent()
+	end
+end
+
 local function weekKey(now: number): string
 	-- ISO-ish week bucket: days since epoch / 7
 	return tostring(math.floor(now / (7 * 24 * 3600)))
@@ -46,6 +104,7 @@ function WeatherService.Init()
 	end
 
 	print("[WeatherService] Active event:", state.eventId)
+	task.spawn(shortEventLoop)
 end
 
 function WeatherService.GetEvent(): Types.WeatherEvent
@@ -62,6 +121,19 @@ function WeatherService.GetState()
 		sellMultiplier = ev.sellMultiplier,
 		startedAt = state.startedAt,
 		weekKey = state.weekKey,
+		short = (function()
+			local se = WeatherService.GetShortEvent()
+			if not se then
+				return nil
+			end
+			return {
+				id = se.id,
+				displayName = se.displayName,
+				banner = se.banner,
+				endsAt = short.endsAt,
+				color = se.color,
+			}
+		end)(),
 	}
 end
 

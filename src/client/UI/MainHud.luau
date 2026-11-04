@@ -6,6 +6,7 @@
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
+local Mutations = require(game:GetService("ReplicatedStorage").Shared.Config.Mutations)
 
 local MainHud = {}
 
@@ -108,6 +109,20 @@ function MainHud.Create(handlers: {
 	weatherLabel.Font = Enum.Font.Gotham
 	weatherLabel.TextScaled = true
 	weatherLabel.Parent = top
+
+	-- Short weather event banner (server-wide, free)
+	local eventBanner = Instance.new("TextLabel")
+	eventBanner.Name = "WeatherEventBanner"
+	eventBanner.Size = UDim2.new(0.5, 0, 0, 36)
+	eventBanner.Position = UDim2.new(0.25, 0, 0, 72)
+	eventBanner.BackgroundColor3 = Color3.fromRGB(60, 110, 180)
+	eventBanner.BackgroundTransparency = 0.15
+	eventBanner.TextColor3 = Color3.new(1, 1, 1)
+	eventBanner.Font = Enum.Font.GothamBold
+	eventBanner.TextScaled = true
+	eventBanner.Visible = false
+	eventBanner.Parent = gui
+	corner(eventBanner, 10)
 
 	local btnInv =
 		makeButton("Envanter", top, UDim2.new(0.12, 0, 1, 0), UDim2.new(0.72, 0, 0, 0), Color3.fromRGB(60, 100, 150))
@@ -249,6 +264,17 @@ function MainHud.Create(handlers: {
 		setWeather = function(w: any)
 			if typeof(w) == "table" then
 				weatherLabel.Text = string.format("%s — %s", w.displayName or "?", w.description or "")
+				local se = w.short
+				if typeof(se) == "table" then
+					local mins = math.max(0, math.ceil(((se.endsAt or 0) - os.time()) / 60))
+					eventBanner.Text = string.format("%s (~%d dk)", se.banner or se.displayName or "", mins)
+					if typeof(se.color) == "Color3" then
+						eventBanner.BackgroundColor3 = se.color
+					end
+					eventBanner.Visible = true
+				else
+					eventBanner.Visible = false
+				end
 			end
 		end,
 		toggleInventory = function()
@@ -274,7 +300,15 @@ function MainHud.Create(handlers: {
 			for key, count in pairs(inv) do
 				if count > 0 then
 					local isCrop = string.sub(key, 1, 5) == "crop:"
-					local label = if isCrop then ("Ürün: " .. string.sub(key, 6)) else ("Tohum: " .. key)
+					local label = "Tohum: " .. key
+					if isCrop then
+						local seedId, mutId = Mutations.ParseCropKey(key)
+						local mut = Mutations.Get(mutId)
+						label = "Ürün: " .. (seedId or "?")
+						if mut then
+							label = string.format("Ürün: %s %s (x%d)", mut.displayName, seedId or "?", mut.multiplier)
+						end
+					end
 					local row = makeButton(
 						string.format("%s  ×%d%s", label, count, if not isCrop then " (seç)" else ""),
 						inventoryList,
@@ -327,6 +361,21 @@ function MainHud.Create(handlers: {
 					shopHandlers.buySeed(seed.id, 1)
 				end)
 				y += 42
+			end
+
+			addSection("Mutasyon Oranları (hasat başına)")
+			if state.shop and state.shop.mutationOdds then
+				local info = Instance.new("TextLabel")
+				info.Size = UDim2.new(1, -8, 0, 56)
+				info.BackgroundTransparency = 1
+				info.TextWrapped = true
+				info.TextScaled = true
+				info.Font = Enum.Font.Gotham
+				info.TextColor3 = Color3.fromRGB(230, 230, 230)
+				info.Text = state.shop.mutationOdds
+					.. string.format("\nAltın garanti: %d hasat sonra", state.shop.mutationPity or 0)
+				info.Parent = shopList
+				y += 62
 			end
 
 			addSection("Yükseltmeler")

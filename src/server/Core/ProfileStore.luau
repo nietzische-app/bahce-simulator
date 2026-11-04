@@ -40,6 +40,7 @@ local DEFAULT_DATA: Types.PlayerData = {
 	lastDailyClaim = 0,
 	totalHarvested = 0,
 	totalEarned = 0,
+	goldenPity = 0,
 	plotIndex = nil,
 	sessionLockId = nil,
 	sessionLockExpires = nil,

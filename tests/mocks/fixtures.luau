@@ -35,6 +35,9 @@ function F.serverLoader(weather: { growth: number, sell: number }?)
 		SellMultiplier = function()
 			return w.sell
 		end,
+		MutationBoosts = function()
+			return (w :: any).boosts or {}
+		end,
 	})
 	l:mock("ServerScriptService.Server.Systems.PlotService", {
 		GetOwnedPlots = function()

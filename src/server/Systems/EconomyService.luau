@@ -3,6 +3,7 @@ local Seeds = require(game.ReplicatedStorage.Shared.Config.Seeds)
 local GameConfig = require(game.ReplicatedStorage.Shared.Config.Game)
 local Monetization = require(game.ReplicatedStorage.Shared.Config.Monetization)
 local Types = require(game.ReplicatedStorage.Shared.Core.Types)
+local Mutations = require(game.ReplicatedStorage.Shared.Config.Mutations)
 local WeatherService = require(script.Parent.WeatherService)
 
 local EconomyService = {}
@@ -25,11 +26,11 @@ function EconomyService.SellAllCrops(data: Types.PlayerData): (boolean, string, 
 	local mult = EconomyService.SellMultiplier(data)
 	local keysToClear = {}
 	for key, count in pairs(data.inventory) do
-		if string.sub(key, 1, 5) == "crop:" and count > 0 then
-			local seedId = string.sub(key, 6)
+		local seedId, mutationId = Mutations.ParseCropKey(key)
+		if seedId and count > 0 then
 			local seed = Seeds.Get(seedId)
 			if seed then
-				local gain = math.floor(seed.sellPrice * count * mult)
+				local gain = math.floor(seed.sellPrice * count * mult * Mutations.Multiplier(mutationId))
 				total += gain
 				sold += count
 				table.insert(keysToClear, key)

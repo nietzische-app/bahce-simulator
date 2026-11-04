@@ -48,6 +48,7 @@ export type PlayerData = {
 	lastDailyClaim: number, -- unix day index or timestamp
 	totalHarvested: number,
 	totalEarned: number,
+	goldenPity: number?, -- harvests since last Golden/Rainbow mutation
 	plotIndex: number?, -- assigned plot (persisted preference)
 	sessionLockId: string?,
 	sessionLockExpires: number?,

@@ -18,6 +18,7 @@ local PlotService = require(script.Parent.PlotService)
 local PlantService = require(script.Parent.PlantService)
 local EconomyService = require(script.Parent.EconomyService)
 local WeatherService = require(script.Parent.WeatherService)
+local Mutations = require(game.ReplicatedStorage.Shared.Config.Mutations)
 local LeaderboardService = require(script.Parent.LeaderboardService)
 local DailyRewardService = require(script.Parent.DailyRewardService)
 local MonetizationService = require(script.Parent.MonetizationService)
@@ -51,6 +52,8 @@ local function buildState(player: Player, data: any)
 			gamepasses = Monetization.Gamepasses,
 			products = Monetization.DevProducts,
 			seedPackOdds = Monetization.FormatSeedPackOdds(),
+			mutationOdds = Mutations.FormatOdds(WeatherService.MutationBoosts()),
+			mutationPity = Mutations.GOLDEN_PITY - (data.goldenPity or 0),
 		},
 		plotIndexes = (function()
 			local idxs = {}
@@ -151,6 +154,11 @@ end
 function GameService.Init()
 	Remotes.Init()
 	PlotService.Init()
+	WeatherService.OnChanged(function()
+		for _, p in Players:GetPlayers() do
+			pushState(p)
+		end
+	end)
 	WeatherService.Init()
 	MonetizationService.Init(store, pushState)
 

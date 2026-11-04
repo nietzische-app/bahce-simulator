@@ -46,6 +46,91 @@ local Events: { Types.WeatherEvent } = {
 
 local Weather = {}
 
+--[[
+	Short server-wide events (a few minutes). Free for everyone, never purchasable.
+	mutationBoosts multiply the base mutation chance.
+]]
+export type ShortEvent = {
+	id: string,
+	displayName: string,
+	banner: string,
+	minDuration: number,
+	maxDuration: number,
+	weight: number,
+	mutationBoosts: { [string]: number },
+	color: Color3,
+}
+
+Weather.SHORT_EVENT_MIN_GAP = 15 * 60
+Weather.SHORT_EVENT_MAX_GAP = 25 * 60
+
+Weather.ShortEvents = {
+	{
+		id = "Rain",
+		displayName = "Yağmur",
+		banner = "🌧️ Yağmur yağıyor! Islak ürün şansı x5",
+		minDuration = 180,
+		maxDuration = 300,
+		weight = 50,
+		mutationBoosts = { Wet = 5 },
+		color = Color3.fromRGB(60, 110, 180),
+	},
+	{
+		id = "Snow",
+		displayName = "Kar",
+		banner = "❄️ Kar yağıyor! Donmuş ürün şansı x5",
+		minDuration = 180,
+		maxDuration = 300,
+		weight = 30,
+		mutationBoosts = { Frozen = 5 },
+		color = Color3.fromRGB(150, 190, 220),
+	},
+	{
+		id = "Storm",
+		displayName = "Fırtına",
+		banner = "⛈️ Fırtına! Altın x2, Gökkuşağı x3 şansı",
+		minDuration = 120,
+		maxDuration = 240,
+		weight = 20,
+		mutationBoosts = { Golden = 2, Rainbow = 3, Wet = 2 },
+		color = Color3.fromRGB(90, 70, 130),
+	},
+} :: { ShortEvent }
+
+function Weather.GetShort(id: string?): ShortEvent?
+	for _, e in Weather.ShortEvents do
+		if e.id == id then
+			return e
+		end
+	end
+	return nil
+end
+
+-- Returns event, duration seconds
+function Weather.PickShortEvent(rng: any): (ShortEvent, number)
+	local total = 0
+	for _, e in Weather.ShortEvents do
+		total += e.weight
+	end
+	local roll = rng:NextNumber() * total
+	local acc = 0
+	local picked = Weather.ShortEvents[#Weather.ShortEvents]
+	for _, e in Weather.ShortEvents do
+		acc += e.weight
+		if roll < acc then
+			picked = e
+			break
+		end
+	end
+	local dur = picked.minDuration + math.floor(rng:NextNumber() * (picked.maxDuration - picked.minDuration))
+	return picked, dur
+end
+
+function Weather.NextGap(rng: any): number
+	return Weather.SHORT_EVENT_MIN_GAP
+		+ math.floor(rng:NextNumber() * (Weather.SHORT_EVENT_MAX_GAP - Weather.SHORT_EVENT_MIN_GAP))
+end
+
 function Weather.All(): { Types.WeatherEvent }
 	return Events
 end

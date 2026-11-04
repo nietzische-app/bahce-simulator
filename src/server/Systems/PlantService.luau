@@ -6,10 +6,14 @@
 local GameConfig = require(game.ReplicatedStorage.Shared.Config.Game)
 local Seeds = require(game.ReplicatedStorage.Shared.Config.Seeds)
 local Types = require(game.ReplicatedStorage.Shared.Core.Types)
+local Mutations = require(game.ReplicatedStorage.Shared.Config.Mutations)
 local WeatherService = require(script.Parent.WeatherService)
 local PlotService = require(script.Parent.PlotService)
 
 local PlantService = {}
+
+-- Server-side RNG (overridable in tests)
+PlantService.rng = Random.new() :: any
 
 local function effectiveGrowTime(seed: Types.SeedConfig, upgrades: Types.UpgradeState): number
 	local level = math.clamp(upgrades.growthSpeedLevel, 0, GameConfig.GROWTH_SPEED_MAX_LEVEL)
@@ -89,13 +93,17 @@ function PlantService.Harvest(data: Types.PlayerData, slotIndex: number): (boole
 	end
 	table.remove(data.plants, idx)
 	data.totalHarvested += 1
-	-- Harvest yields the crop as sellable credit via immediate inventory crop token
-	-- For MVP: harvesting adds a "crop" counted as ready-to-sell by storing seedId in a harvest buffer
-	-- Simpler: return sell value to caller; EconomyService adds coins on sell.
-	-- We'll stash harvested crops in inventory under "CROP_" prefix OR just give sell on harvest?
-	-- Design: harvest puts crop into inventory as seedId with meta - actually use inventory key "crop:"..seedId
-	local cropKey = "crop:" .. seed.id
+	local boosts = if WeatherService.MutationBoosts then WeatherService.MutationBoosts() else {}
+	local mutationId, pity = Mutations.Roll(PlantService.rng, boosts, data.goldenPity)
+	data.goldenPity = pity
+	local cropKey = Mutations.CropKey(seed.id, mutationId)
 	data.inventory[cropKey] = (data.inventory[cropKey] or 0) + 1
+	local mut = Mutations.Get(mutationId)
+	if mut then
+		return true,
+			string.format("%s %s hasat edildi! (x%d değer)", mut.displayName, seed.displayName, mut.multiplier),
+			seed.sellPrice * mut.multiplier
+	end
 	return true, seed.displayName .. " hasat edildi!", seed.sellPrice
 end
 
