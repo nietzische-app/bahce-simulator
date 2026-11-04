@@ -22,6 +22,56 @@
           "$path": "src/client"
         }
       }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "Ground": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Size": [
+            512,
+            4,
+            512
+          ],
+          "Position": [
+            0,
+            -2,
+            0
+          ],
+          "Color": [
+            0.36,
+            0.6,
+            0.27
+          ],
+          "Material": "Grass",
+          "TopSurface": "Smooth"
+        }
+      },
+      "SpawnLocation": {
+        "$className": "SpawnLocation",
+        "$properties": {
+          "Anchored": true,
+          "Size": [
+            8,
+            1,
+            8
+          ],
+          "Position": [
+            0,
+            0.5,
+            0
+          ],
+          "Transparency": 1,
+          "CanCollide": false
+        }
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "ClockTime": 13
+      }
     }
   }
 }
