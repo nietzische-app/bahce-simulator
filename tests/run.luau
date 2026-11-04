@@ -14,6 +14,10 @@ local specs = {
 	"gear",
 	"collection",
 	"decor",
+	"pets",
+	"events",
+	"crafting",
+	"rebirth",
 }
 for _, name in specs do
 	local ok, err = pcall(function()

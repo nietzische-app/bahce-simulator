@@ -52,7 +52,18 @@ local DEFAULT_DATA: Types.PlayerData = {
 }
 
 -- Kept as-is when present; absent on old profiles (backfilled by services)
-local OPTIONAL_KEYS = { "collection", "collectionClaimed", "lastSeenAt", "sprinkler", "decor", "likes", "likesGiven" }
+local OPTIONAL_KEYS = {
+	"collection",
+	"collectionClaimed",
+	"lastSeenAt",
+	"sprinkler",
+	"decor",
+	"likes",
+	"likesGiven",
+	"pets",
+	"eventCurrency",
+	"rebirthCount",
+}
 
 local function deepCopy<T>(value: T): T
 	if typeof(value) ~= "table" then

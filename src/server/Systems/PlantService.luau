@@ -12,19 +12,22 @@ local PlotService = require(script.Parent.PlotService)
 local QuestService = require(script.Parent.QuestService)
 local GearService = require(script.Parent.GearService)
 local CollectionService = require(script.Parent.CollectionService)
+local PetService = require(script.Parent.PetService)
+local EventService = require(script.Parent.EventService)
 
 local PlantService = {}
 
 -- Server-side RNG (overridable in tests)
 PlantService.rng = Random.new() :: any
 
-local function effectiveGrowTime(seed: Types.SeedConfig, upgrades: Types.UpgradeState): number
-	local level = math.clamp(upgrades.growthSpeedLevel, 0, GameConfig.GROWTH_SPEED_MAX_LEVEL)
+local function effectiveGrowTime(seed: Types.SeedConfig, data: Types.PlayerData): number
+	local level = math.clamp(data.upgrades.growthSpeedLevel, 0, GameConfig.GROWTH_SPEED_MAX_LEVEL)
 	local speedFactor = 1 - (level * GameConfig.GROWTH_SPEED_PER_LEVEL)
 	speedFactor = math.max(0.4, speedFactor)
 	local weather = WeatherService.GrowthMultiplier()
-	-- Higher weather multiplier = faster growth => divide time
-	return seed.growTimeSeconds * speedFactor / weather
+	local petGrowth = PetService.GrowthMultiplier(data)
+	-- Higher weather/pet multiplier = faster growth => divide time
+	return seed.growTimeSeconds * speedFactor / weather / petGrowth
 end
 
 function PlantService.MaxSlots(data: Types.PlayerData): number
@@ -45,7 +48,7 @@ function PlantService.GetProgress(plant: Types.PlantInstance, data: Types.Player
 	if not seed then
 		return 0, false, 0
 	end
-	local need = effectiveGrowTime(seed, data.upgrades)
+	local need = effectiveGrowTime(seed, data)
 	local now = os.time()
 	local elapsed = now - plant.plantedAt + GearService.SprinklerBonus(data, plant.plantedAt, now)
 	local progress = math.clamp(elapsed / need, 0, 1)
@@ -60,7 +63,7 @@ function PlantService.IsReadyAt(plant: Types.PlantInstance, data: Types.PlayerDa
 	if not seed then
 		return false
 	end
-	local need = effectiveGrowTime(seed, data.upgrades)
+	local need = effectiveGrowTime(seed, data)
 	return t - plant.plantedAt + GearService.SprinklerBonus(data, plant.plantedAt, t) >= need
 end
 
@@ -117,7 +120,11 @@ function PlantService.Harvest(data: Types.PlayerData, slotIndex: number): (boole
 	data.inventory[cropKey] = (data.inventory[cropKey] or 0) + 1 + bonus
 	local mut = Mutations.Get(mutationId)
 	QuestService.Track(data, "harvest", 1)
+	local eventGain = EventService.OnHarvest(data, os.time())
 	local extra = if bonus > 0 then string.format(" Gübre: +%d ürün!", bonus) else ""
+	if eventGain > 0 then
+		extra ..= string.format(" +%d etkinlik", eventGain)
+	end
 	if CollectionService.Record(data, seed.id, mutationId, os.time()) then
 		extra ..= " Koleksiyona eklendi!"
 	end
@@ -141,7 +148,7 @@ function PlantService.InstantGrowAll(data: Types.PlayerData)
 	for _, plant in data.plants do
 		local seed = Seeds.Get(plant.seedId)
 		if seed then
-			plant.plantedAt = now - math.ceil(effectiveGrowTime(seed, data.upgrades))
+			plant.plantedAt = now - math.ceil(effectiveGrowTime(seed, data))
 		end
 	end
 end

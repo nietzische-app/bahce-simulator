@@ -6,6 +6,8 @@ local Types = require(game.ReplicatedStorage.Shared.Core.Types)
 local Mutations = require(game.ReplicatedStorage.Shared.Config.Mutations)
 local WeatherService = require(script.Parent.WeatherService)
 local QuestService = require(script.Parent.QuestService)
+local PetService = require(script.Parent.PetService)
+local RebirthService = require(script.Parent.RebirthService)
 
 local EconomyService = {}
 
@@ -18,6 +20,8 @@ function EconomyService.SellMultiplier(data: Types.PlayerData): number
 	if EconomyService.HasGamepass(data, Monetization.Gamepasses.DoubleSell.key) then
 		m *= 2
 	end
+	m *= PetService.SellMultiplier(data)
+	m *= RebirthService.SellMultiplier(data)
 	return m
 end
 

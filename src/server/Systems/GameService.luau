@@ -29,6 +29,10 @@ local CollectionService = require(script.Parent.CollectionService)
 local OfflineService = require(script.Parent.OfflineService)
 local DecorService = require(script.Parent.DecorService)
 local LikeService = require(script.Parent.LikeService)
+local PetService = require(script.Parent.PetService)
+local EventService = require(script.Parent.EventService)
+local CraftingService = require(script.Parent.CraftingService)
+local RebirthService = require(script.Parent.RebirthService)
 local Social = require(game.ReplicatedStorage.Shared.Config.Social)
 
 local GameService = {}
@@ -71,6 +75,10 @@ local function buildState(player: Player, data: any)
 		collection = CollectionService.Serialize(data),
 		decor = DecorService.Serialize(data),
 		likes = LikeService.Likes(data),
+		pets = PetService.Serialize(data),
+		events = EventService.Serialize(data, os.time()),
+		crafting = CraftingService.Serialize(data),
+		rebirth = RebirthService.Serialize(data),
 		reactions = Social.REACTIONS,
 		weather = WeatherService.GetState(),
 		seeds = Seeds.ListOrdered(),
@@ -512,6 +520,86 @@ function GameService.Init()
 			PlotService.ShowReaction(plot, emoji)
 			notify(target, player.DisplayName .. " bahçene " .. emoji .. " bıraktı!", "info")
 		end
+	end)
+
+	Remotes.Event("BuyEgg").OnServerEvent:Connect(function(player, eggId)
+		if typeof(eggId) ~= "string" or #eggId > 40 then
+			return
+		end
+		withProfile(player, "egg", function(profile)
+			local ok, msg = PetService.BuyEgg(profile.Data, eggId)
+			notify(player, msg, if ok then "ok" else "warn")
+			pushState(player)
+		end)
+	end)
+
+	Remotes.Event("EquipPet").OnServerEvent:Connect(function(player, uid)
+		if typeof(uid) ~= "string" or #uid > 64 then
+			return
+		end
+		withProfile(player, "pet", function(profile)
+			local ok, msg = PetService.Equip(profile.Data, uid)
+			notify(player, msg, if ok then "ok" else "warn")
+			pushState(player)
+		end)
+	end)
+
+	Remotes.Event("UnequipPet").OnServerEvent:Connect(function(player, uid)
+		if typeof(uid) ~= "string" or #uid > 64 then
+			return
+		end
+		withProfile(player, "pet", function(profile)
+			local ok, msg = PetService.Unequip(profile.Data, uid)
+			notify(player, msg, if ok then "ok" else "warn")
+			pushState(player)
+		end)
+	end)
+
+	Remotes.Event("BuyEventItem").OnServerEvent:Connect(function(player, eventId, itemId)
+		if typeof(eventId) ~= "string" or typeof(itemId) ~= "string" or #eventId > 40 or #itemId > 40 then
+			return
+		end
+		withProfile(player, "event", function(profile)
+			local ok, msg = EventService.BuyEvent(profile.Data, eventId, itemId, os.time(), PetService.GrantRolledEgg)
+			notify(player, msg, if ok then "ok" else "warn")
+			pushState(player)
+		end)
+	end)
+
+	Remotes.Event("BuyLegacyEventItem").OnServerEvent:Connect(function(player, eventId, itemId)
+		if typeof(eventId) ~= "string" or typeof(itemId) ~= "string" or #eventId > 40 or #itemId > 40 then
+			return
+		end
+		withProfile(player, "event", function(profile)
+			local ok, msg = EventService.BuyLegacy(profile.Data, eventId, itemId, os.time(), PetService.GrantRolledEgg)
+			notify(player, msg, if ok then "ok" else "warn")
+			pushState(player)
+		end)
+	end)
+
+	Remotes.Event("Craft").OnServerEvent:Connect(function(player, recipeId)
+		if typeof(recipeId) ~= "string" or #recipeId > 40 then
+			return
+		end
+		withProfile(player, "craft", function(profile)
+			local ok, msg = CraftingService.Craft(profile.Data, recipeId)
+			notify(player, msg, if ok then "ok" else "warn")
+			pushState(player)
+		end)
+	end)
+
+	Remotes.Event("Rebirth").OnServerEvent:Connect(function(player, confirm)
+		if typeof(confirm) ~= "string" or #confirm > 40 then
+			return
+		end
+		withProfile(player, "rebirth", function(profile)
+			local ok, msg = RebirthService.Perform(profile.Data, confirm)
+			notify(player, msg, if ok then "ok" else "warn")
+			if ok then
+				LeaderboardService.UpdateCoins(player.UserId, profile.Data.coins)
+			end
+			pushState(player)
+		end)
 	end)
 
 	Remotes.Event("PromptGamepass").OnServerEvent:Connect(function(player, key)

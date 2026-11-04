@@ -11,6 +11,8 @@ local MainHud = require(script.UI.MainHud)
 local PlotController = require(script.Controllers.PlotController)
 local AlbumPanels = require(script.UI.AlbumPanels)
 local SocialPanels = require(script.UI.SocialPanels)
+local FeaturePanels = require(script.UI.FeaturePanels)
+local PetFollower = require(script.Controllers.PetFollower)
 
 local player = Players.LocalPlayer
 local remotes = ReplicatedStorage:WaitForChild("Remotes", 30) :: Folder
@@ -52,6 +54,10 @@ end)
 local social = SocialPanels.Create(remotes, function(msg: string, kind: string?)
 	hud.setNotify(msg, kind)
 end)
+local features = FeaturePanels.Create(remotes, function(msg: string, kind: string?)
+	hud.setNotify(msg, kind)
+end)
+PetFollower.Init()
 local offlineEvent = remotes:WaitForChild("OfflineSummary") :: RemoteEvent
 offlineEvent.OnClientEvent:Connect(album.showOffline)
 
@@ -59,6 +65,20 @@ local function applyState(s: any)
 	state = s
 	album.refresh(s.collection)
 	social.refresh(s)
+	features.refresh(s)
+	local visuals = {}
+	if typeof(s.pets) == "table" then
+		for _, o in s.pets.owned or {} do
+			if o.equipped then
+				table.insert(visuals, {
+					uid = o.uid,
+					petId = o.petId,
+					modelName = o.modelName,
+				})
+			end
+		end
+	end
+	PetFollower.Sync(visuals)
 	hud.setCoins(s.coins or 0)
 	hud.setWeather(s.weather)
 	hud.refreshInventory(s, function(gearId: string)

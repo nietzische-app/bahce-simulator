@@ -61,6 +61,9 @@ export type PlayerData = {
 	decor: any?, -- { owned = {id->count}, placed = { {id, slot, rot} } } (kozmetik)
 	likes: number?, -- alınan toplam beğeni
 	likesGiven: any?, -- { day, targets = {userIdStr=true} }
+	pets: any?, -- { owned, equipped, pity } (PetService)
+	eventCurrency: { [string]: number }?, -- seasonal event currencies
+	rebirthCount: number?, -- permanent sell multiplier stack
 	plotIndex: number?, -- assigned plot (persisted preference)
 	sessionLockId: string?,
 	sessionLockExpires: number?,
