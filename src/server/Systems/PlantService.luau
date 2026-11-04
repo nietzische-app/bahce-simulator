@@ -11,6 +11,7 @@ local WeatherService = require(script.Parent.WeatherService)
 local PlotService = require(script.Parent.PlotService)
 local QuestService = require(script.Parent.QuestService)
 local GearService = require(script.Parent.GearService)
+local CollectionService = require(script.Parent.CollectionService)
 
 local PlantService = {}
 
@@ -51,6 +52,16 @@ function PlantService.GetProgress(plant: Types.PlantInstance, data: Types.Player
 	local ready = elapsed >= need
 	local remaining = math.max(0, need - elapsed)
 	return progress, ready, remaining
+end
+
+-- Was the plant ripe at time t? (used for offline summary)
+function PlantService.IsReadyAt(plant: Types.PlantInstance, data: Types.PlayerData, t: number): boolean
+	local seed = Seeds.Get(plant.seedId)
+	if not seed then
+		return false
+	end
+	local need = effectiveGrowTime(seed, data.upgrades)
+	return t - plant.plantedAt + GearService.SprinklerBonus(data, plant.plantedAt, t) >= need
 end
 
 function PlantService.Plant(data: Types.PlayerData, seedId: string, slotIndex: number): (boolean, string)
@@ -107,6 +118,9 @@ function PlantService.Harvest(data: Types.PlayerData, slotIndex: number): (boole
 	local mut = Mutations.Get(mutationId)
 	QuestService.Track(data, "harvest", 1)
 	local extra = if bonus > 0 then string.format(" Gübre: +%d ürün!", bonus) else ""
+	if CollectionService.Record(data, seed.id, mutationId, os.time()) then
+		extra ..= " Koleksiyona eklendi!"
+	end
 	if mut then
 		QuestService.Track(data, "mutated", 1)
 		return true,

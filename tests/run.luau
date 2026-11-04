@@ -2,7 +2,8 @@
 local process = require("@lune/process")
 local T = require("./mocks/test")
 
-local specs = { "config", "plant", "economy", "daily", "plotcontroller", "mutations", "stock", "quests", "gear" }
+local specs =
+	{ "config", "plant", "economy", "daily", "plotcontroller", "mutations", "stock", "quests", "gear", "collection" }
 for _, name in specs do
 	local ok, err = pcall(function()
 		require("./specs/" .. name)()

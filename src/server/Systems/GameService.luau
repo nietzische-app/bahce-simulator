@@ -25,6 +25,8 @@ local MonetizationService = require(script.Parent.MonetizationService)
 local StockService = require(script.Parent.StockService)
 local QuestService = require(script.Parent.QuestService)
 local GearService = require(script.Parent.GearService)
+local CollectionService = require(script.Parent.CollectionService)
+local OfflineService = require(script.Parent.OfflineService)
 
 local GameService = {}
 
@@ -51,6 +53,7 @@ local function buildState(player: Player, data: any)
 		quests = QuestService.Serialize(data),
 		stock = StockService.Snapshot(player.UserId, os.time()),
 		gear = GearService.Serialize(data, os.time()),
+		collection = CollectionService.Serialize(data),
 		weather = WeatherService.GetState(),
 		seeds = Seeds.ListOrdered(),
 		shop = {
@@ -107,6 +110,15 @@ local function onPlayerAdded(player: Player)
 		return
 	end
 
+	-- Offline summary uses the previous lastSeenAt, before any save overwrites it
+	local now = os.time()
+	local data = profile.Data
+	local summary = OfflineService.Build(data, now, function(plant, t)
+		return PlantService.IsReadyAt(plant, data, t)
+	end)
+	data.lastSeenAt = now
+	CollectionService.Ensure(data)
+
 	local plot = PlotService.AssignPlot(player.UserId, profile.Data.plotIndex)
 	if plot then
 		profile.Data.plotIndex = plot.index
@@ -126,6 +138,9 @@ local function onPlayerAdded(player: Player)
 	LeaderboardService.EnsureLeaderstats(player, profile.Data.coins, profile.Data.totalHarvested)
 	LeaderboardService.UpdateCoins(player.UserId, profile.Data.coins)
 	pushState(player)
+	if summary then
+		Remotes.Event("OfflineSummary"):FireClient(player, summary)
+	end
 
 	-- Auto-harvest loop for gamepass holders
 	task.spawn(function()
@@ -288,6 +303,20 @@ function GameService.Init()
 		withProfile(player, "quest", function(profile)
 			local ok, msg = QuestService.Claim(profile.Data, index)
 			notify(player, msg, if ok then "ok" else "warn")
+			pushState(player)
+		end)
+	end)
+
+	Remotes.Event("ClaimCollection").OnServerEvent:Connect(function(player, seedId)
+		if typeof(seedId) ~= "string" or #seedId > 40 then
+			return
+		end
+		withProfile(player, "collection", function(profile)
+			local ok, msg = CollectionService.ClaimRow(profile.Data, seedId)
+			notify(player, msg, if ok then "ok" else "warn")
+			if ok then
+				LeaderboardService.UpdateCoins(player.UserId, profile.Data.coins)
+			end
 			pushState(player)
 		end)
 	end)

@@ -51,6 +51,9 @@ local DEFAULT_DATA: Types.PlayerData = {
 	dataVersion = GameConfig.DATA_VERSION,
 }
 
+-- Kept as-is when present; absent on old profiles (backfilled by services)
+local OPTIONAL_KEYS = { "collection", "collectionClaimed", "lastSeenAt", "sprinkler" }
+
 local function deepCopy<T>(value: T): T
 	if typeof(value) ~= "table" then
 		return value
@@ -88,6 +91,12 @@ local function reconcile(data: any): Types.PlayerData
 			end
 		else
 			out[key] = incoming
+		end
+	end
+	-- Optional fields with no default (nil means "not yet created")
+	for _, key in OPTIONAL_KEYS do
+		if data[key] ~= nil then
+			(out :: any)[key] = data[key]
 		end
 	end
 	-- First-time inventory seed
@@ -203,6 +212,7 @@ function ProfileStore:Save(profile: Profile, release: boolean)
 	profile._saving = true
 
 	local now = os.time()
+	profile.Data.lastSeenAt = now
 	local payload = deepCopy(profile.Data)
 	if release then
 		payload.sessionLockId = nil

@@ -55,6 +55,9 @@ export type PlayerData = {
 	gear: { [string]: number }?, -- gearId -> count
 	sprinkler: { startAt: number, endAt: number }?,
 	fertilizerCharges: number?,
+	collection: { [string]: number }?, -- cropKey -> first harvest time (0 = backfilled)
+	collectionClaimed: { [string]: boolean }?,
+	lastSeenAt: number?,
 	plotIndex: number?, -- assigned plot (persisted preference)
 	sessionLockId: string?,
 	sessionLockExpires: number?,

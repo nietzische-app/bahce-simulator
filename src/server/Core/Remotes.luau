@@ -19,6 +19,8 @@ local EVENT_NAMES = {
 	"UseGear",
 	"ClaimDaily",
 	"ClaimQuest",
+	"ClaimCollection",
+	"OfflineSummary",
 	"RequestState",
 	"StateUpdate",
 	"Notify",
