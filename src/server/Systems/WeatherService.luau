@@ -18,7 +18,7 @@ local function weekKey(now: number): string
 end
 
 function WeatherService.Init()
-	local store = DataStoreService:GetDataStore(STORE_NAME)
+	local store = require(script.Parent.Parent.Core.SafeDataStore).Get(STORE_NAME)
 	local now = os.time()
 	local key = weekKey(now)
 

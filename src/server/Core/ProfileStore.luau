@@ -118,7 +118,7 @@ end
 
 function ProfileStore.new(storeName: string)
 	local self = setmetatable({
-		_store = DataStoreService:GetDataStore(storeName),
+		_store = require(script.Parent.SafeDataStore).Get(storeName),
 		_profiles = {} :: { [number]: Profile },
 	}, ProfileStore)
 	return self

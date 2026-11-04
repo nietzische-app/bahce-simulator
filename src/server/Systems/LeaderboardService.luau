@@ -5,7 +5,7 @@ local GameConfig = require(game.ReplicatedStorage.Shared.Config.Game)
 
 local LeaderboardService = {}
 
-local ordered = DataStoreService:GetOrderedDataStore(GameConfig.LEADERBOARD_STORE)
+local ordered = require(script.Parent.Parent.Core.SafeDataStore).Get(GameConfig.LEADERBOARD_STORE, true)
 
 function LeaderboardService.UpdateCoins(userId: number, coins: number)
 	task.spawn(function()
