@@ -30,19 +30,19 @@ local Monetization = {
 			key = "DoubleSell",
 			displayName = "2x Satış",
 			description = "Hasat satışlarından 2 kat coin kazanırsın.",
-			gamePassId = 0, -- PLACEHOLDER: set real Game Pass ID
+			gamePassId = 2071002408,
 		} :: GamepassDef,
 		AutoHarvest = {
 			key = "AutoHarvest",
 			displayName = "Otomatik Hasat",
 			description = "Olgun bitkiler otomatik toplanır.",
-			gamePassId = 0, -- PLACEHOLDER
+			gamePassId = 2069695861,
 		} :: GamepassDef,
 		ExtraPlot = {
 			key = "ExtraPlot",
 			displayName = "Ekstra Parsel",
 			description = "İkinci bir bahçe parseli açılır.",
-			gamePassId = 0, -- PLACEHOLDER
+			gamePassId = 2067769938,
 		} :: GamepassDef,
 	},
 
@@ -51,13 +51,13 @@ local Monetization = {
 			key = "InstantGrow",
 			displayName = "Anında Büyüt",
 			description = "Bahçendeki tüm bitkileri hemen olgunlaştırır. (Zorunlu değil — beklemek ücretsizdir.)",
-			productId = 0, -- PLACEHOLDER
+			productId = 3728169590,
 		} :: DevProductDef,
 		SeedPack = {
 			key = "SeedPack",
 			displayName = "Tohum Paketi",
 			description = "Rastgele tohumlar. Oranlar açıktır (aşağıda).",
-			productId = 0, -- PLACEHOLDER
+			productId = 3728169615,
 		} :: DevProductDef,
 	},
 
