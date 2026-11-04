@@ -16,7 +16,19 @@ Import these into Roblox Studio → **ReplicatedStorage/Models/<stem>**.
 Kaynak: AI referans (`assets/refs`) → free TRELLIS image→3D (`assets/models/raw/*.glb`) → Blender cleanup (`art/blender/cleanup_export.py`) → FBX (<5k tri).
 Önizleme: `shots/art_contact_sheet.png`.
 
-## Dekor modelleri (AI art bekliyor)
-`ReplicatedStorage/Models/<ad>` altına import edin; yoksa yer tutucu Part görünür (bkz. `src/shared/Config/Decor.luau`):
-Decor_Fence, Decor_Bench, Decor_Lantern, Decor_Fountain, Decor_FlowerPot, Decor_Birdhouse, Decor_Gnome, Decor_Swing.
-Pivot = taban merkezi, ~4x4 stud yuvaya sığmalı.
+## Dekor / pet / sprinkler (art pass 2)
+
+| File | Tris (hedef <5k) | Kaynak |
+|------|------------------|--------|
+| Decor_Bench.fbx | ~630 | Poly Haven CC0 |
+| Decor_FlowerPot.fbx | ~3080 | Poly Haven CC0 |
+| Decor_Gnome.fbx | ~5000 | Poly Haven CC0 |
+| Decor_Lantern.fbx | ~4999 | Poly Haven CC0 |
+| Decor_Fence.fbx | ~4999 | Poly Haven CC0 (chainlink) |
+| Sprinkler.fbx | ~5000 | Poly Haven CC0 |
+| Pet_Fox.fbx | ~576 | Khronos Fox CC-BY |
+
+Eksik (HF ZeroGPU / TRELLIS bekliyor): Pet_Bunny, Pet_Chick, Pet_Frog, Pet_Owl, Pet_Hedgehog, Pet_Dragon, Decor_Fountain, Decor_Birdhouse, Decor_Swing.
+
+Import: `docs/STUDIO_FBX_IMPORT_TR.md`. Pipeline: `scripts/art/gen_and_convert.sh`. Önizleme: `/workspace/art_preview.png` (repo dışı kopya `shots/` altına da alınabilir).
+

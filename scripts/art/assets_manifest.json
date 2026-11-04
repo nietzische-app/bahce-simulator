@@ -1,0 +1,21 @@
+{
+  "style": "Cute kid-friendly stylized low-poly 3D game asset, isolated on pure white background, centered, three-quarter view, soft flat studio lighting, colorful Roblox cartoon look, single object, no text, no watermark, no ground plane",
+  "items": [
+    {"name": "Pet_Bunny", "kind": "pet", "height": 1.8, "prompt": "cute chubby cartoon bunny rabbit pet, soft white fur, pink ears, sitting, friendly smile"},
+    {"name": "Pet_Chick", "kind": "pet", "height": 1.4, "prompt": "cute round yellow chick pet, tiny orange beak and feet, fluffy feathers, standing"},
+    {"name": "Pet_Frog", "kind": "pet", "height": 1.3, "prompt": "cute cartoon green frog pet, big eyes, round belly, sitting pose"},
+    {"name": "Pet_Fox", "kind": "pet", "height": 1.8, "prompt": "cute cartoon fox pet, orange fur, white chest, fluffy tail, sitting"},
+    {"name": "Pet_Owl", "kind": "pet", "height": 1.7, "prompt": "cute cartoon owl pet, round body, big eyes, brown and cream feathers, perched"},
+    {"name": "Pet_Hedgehog", "kind": "pet", "height": 1.3, "prompt": "cute cartoon hedgehog pet, round body, soft brown spines, tiny face, sitting"},
+    {"name": "Pet_Dragon", "kind": "pet", "height": 2.0, "prompt": "cute mini cartoon dragon pet, pink-red scales, tiny wings, friendly, sitting"},
+    {"name": "Decor_Fence", "kind": "decor", "height": 2.0, "prompt": "wooden garden fence panel section, rustic brown planks, short decorative posts"},
+    {"name": "Decor_Bench", "kind": "decor", "height": 1.5, "prompt": "wooden garden park bench, warm brown wood, simple cute stylized"},
+    {"name": "Decor_Lantern", "kind": "decor", "height": 3.0, "prompt": "garden lantern on short wooden post, glowing warm yellow lamp glass"},
+    {"name": "Decor_Fountain", "kind": "decor", "height": 2.5, "prompt": "small garden stone fountain with water bowl, cute blue water accents"},
+    {"name": "Decor_FlowerPot", "kind": "decor", "height": 1.4, "prompt": "terracotta flower pot with colorful blooming flowers"},
+    {"name": "Decor_Birdhouse", "kind": "decor", "height": 3.0, "prompt": "cute wooden birdhouse on a pole, blue roof, round entrance hole"},
+    {"name": "Decor_Gnome", "kind": "decor", "height": 1.8, "prompt": "cute garden gnome with red hat, white beard, blue coat, smiling"},
+    {"name": "Decor_Swing", "kind": "decor", "height": 3.5, "prompt": "wooden garden swing set with rope seat, cute kid-friendly"},
+    {"name": "Sprinkler", "kind": "gear", "height": 1.6, "prompt": "cute garden sprinkler with round base and spray head, bright green and silver"}
+  ]
+}
