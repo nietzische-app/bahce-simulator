@@ -1,0 +1,19 @@
+name: Open Cloud test (real Roblox server)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  opencloud:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rojo
+        run: |
+          curl -fsSL -o rojo.zip "https://github.com/rojo-rbx/rojo/releases/download/v7.7.1/rojo-7.7.1-linux-x86_64.zip"
+          unzip -o rojo.zip
+          sudo install -m 755 rojo /usr/local/bin/rojo
+      - name: Build, upload saved version, run Luau probe
+        env:
+          ROBLOX_OC_KEY: ${{ secrets.ROBLOX_OC_KEY }}
+        run: scripts/opencloud_test.sh
