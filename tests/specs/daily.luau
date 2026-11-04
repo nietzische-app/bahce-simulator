@@ -1,0 +1,26 @@
+local T = require("../mocks/test")
+local F = require("../mocks/fixtures")
+
+return function()
+	local l = F.serverLoader()
+	local Daily = l:require("ServerScriptService.Server.Systems.DailyRewardService")
+	local Game = l:require("ReplicatedStorage.Shared.Config.Game")
+
+	T.describe("DailyRewardService", function()
+		T.it("first claim grants coins + seed, second same-day claim fails", function()
+			local d = F.newData()
+			T.ok(Daily.CanClaim(d))
+			T.ok((Daily.Claim(d)))
+			T.eq(d.coins, Game.DAILY_REWARD_COINS)
+			T.eq(d.inventory[Game.DAILY_REWARD_SEED], Game.DAILY_REWARD_SEED_COUNT)
+			T.ok(not Daily.CanClaim(d))
+			T.eq((Daily.Claim(d)), false)
+			T.eq(d.coins, Game.DAILY_REWARD_COINS)
+		end)
+
+		T.it("claim available again on the next UTC day", function()
+			local d = F.newData({ lastDailyClaim = os.time() - 86400 })
+			T.ok(Daily.CanClaim(d))
+		end)
+	end)
+end

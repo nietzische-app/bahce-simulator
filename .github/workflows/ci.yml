@@ -26,6 +26,16 @@ jobs:
           sudo install -m 755 selene /usr/local/bin/selene
           selene --version
 
+      - name: Install Lune
+        run: |
+          curl -fsSL -o lune.zip "https://github.com/lune-org/lune/releases/download/v0.10.4/lune-0.10.4-linux-x86_64.zip"
+          unzip -o lune.zip
+          sudo install -m 755 lune /usr/local/bin/lune
+          lune --version
+
+      - name: Unit tests (lune)
+        run: lune run tests/run
+
       - name: Lint (selene)
         run: selene src
 
