@@ -10,6 +10,7 @@ local StarterGui = game:GetService("StarterGui")
 local MainHud = require(script.UI.MainHud)
 local PlotController = require(script.Controllers.PlotController)
 local AlbumPanels = require(script.UI.AlbumPanels)
+local SocialPanels = require(script.UI.SocialPanels)
 
 local player = Players.LocalPlayer
 local remotes = ReplicatedStorage:WaitForChild("Remotes", 30) :: Folder
@@ -48,12 +49,16 @@ hud = MainHud.Create({
 local album = AlbumPanels.Create(function(seedId: string)
 	(remotes:WaitForChild("ClaimCollection") :: RemoteEvent):FireServer(seedId)
 end)
+local social = SocialPanels.Create(remotes, function(msg: string, kind: string?)
+	hud.setNotify(msg, kind)
+end)
 local offlineEvent = remotes:WaitForChild("OfflineSummary") :: RemoteEvent
 offlineEvent.OnClientEvent:Connect(album.showOffline)
 
 local function applyState(s: any)
 	state = s
 	album.refresh(s.collection)
+	social.refresh(s)
 	hud.setCoins(s.coins or 0)
 	hud.setWeather(s.weather)
 	hud.refreshInventory(s, function(gearId: string)

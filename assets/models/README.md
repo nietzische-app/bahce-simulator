@@ -15,3 +15,8 @@ Import these into Roblox Studio → **ReplicatedStorage/Models/<stem>**.
 
 Kaynak: AI referans (`assets/refs`) → free TRELLIS image→3D (`assets/models/raw/*.glb`) → Blender cleanup (`art/blender/cleanup_export.py`) → FBX (<5k tri).
 Önizleme: `shots/art_contact_sheet.png`.
+
+## Dekor modelleri (AI art bekliyor)
+`ReplicatedStorage/Models/<ad>` altına import edin; yoksa yer tutucu Part görünür (bkz. `src/shared/Config/Decor.luau`):
+Decor_Fence, Decor_Bench, Decor_Lantern, Decor_Fountain, Decor_FlowerPot, Decor_Birdhouse, Decor_Gnome, Decor_Swing.
+Pivot = taban merkezi, ~4x4 stud yuvaya sığmalı.

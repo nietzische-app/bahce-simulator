@@ -58,6 +58,9 @@ export type PlayerData = {
 	collection: { [string]: number }?, -- cropKey -> first harvest time (0 = backfilled)
 	collectionClaimed: { [string]: boolean }?,
 	lastSeenAt: number?,
+	decor: any?, -- { owned = {id->count}, placed = { {id, slot, rot} } } (kozmetik)
+	likes: number?, -- alınan toplam beğeni
+	likesGiven: any?, -- { day, targets = {userIdStr=true} }
 	plotIndex: number?, -- assigned plot (persisted preference)
 	sessionLockId: string?,
 	sessionLockExpires: number?,

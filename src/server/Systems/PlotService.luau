@@ -8,6 +8,7 @@ local Workspace = game:GetService("Workspace")
 local GameConfig = require(game.ReplicatedStorage.Shared.Config.Game)
 local ModelCatalog = require(game.ReplicatedStorage.Shared.Core.ModelCatalog)
 local Seeds = require(game.ReplicatedStorage.Shared.Config.Seeds)
+local Decor = require(game.ReplicatedStorage.Shared.Config.Decor)
 
 local PlotService = {}
 
@@ -276,6 +277,8 @@ function PlotService.ReleasePlots(userId: number)
 			end
 		end
 		PlotService.SetSprinkler(info, false)
+		PlotService.RenderDecor(info, {})
+		info.model:SetAttribute("Likes", nil)
 		PlotService.RefreshSign(info)
 	end
 	byUser[userId] = nil
@@ -287,7 +290,13 @@ function PlotService.RefreshSign(info: PlotInfo)
 		if info.ownerUserId then
 			local player = game.Players:GetPlayerByUserId(info.ownerUserId)
 			local name = if player then player.DisplayName else ("User " .. tostring(info.ownerUserId))
-			label.Text = string.format("Parsel %d — %s", info.index, name)
+			local likes = info.model:GetAttribute("Likes")
+			label.Text = string.format(
+				"Parsel %d — %s  💚 %d",
+				info.index,
+				name,
+				if typeof(likes) == "number" then likes else 0
+			)
 		else
 			label.Text = string.format("Parsel %d (Boş)", info.index)
 		end
@@ -435,6 +444,77 @@ function PlotService.GetSlotPart(info: PlotInfo, slotIndex: number): BasePart?
 		end
 	end
 	return nil
+end
+
+function PlotService.SetLikes(info: PlotInfo, likes: number)
+	info.model:SetAttribute("Likes", likes)
+	PlotService.RefreshSign(info)
+end
+
+function PlotService.GetPlotForUser(userId: number): PlotInfo?
+	local owned = byUser[userId]
+	return if owned then owned[1] else nil
+end
+
+-- Kozmetik dekor: ReplicatedStorage.Models/<modelName> varsa onu, yoksa adlandırılmış yer tutucu Part.
+function PlotService.RenderDecor(info: PlotInfo, placed: { any })
+	local folder = info.model:FindFirstChild("Decor")
+	if folder then
+		folder:Destroy()
+	end
+	folder = Instance.new("Folder")
+	folder.Name = "Decor"
+	folder.Parent = info.model
+	local base = info.model.PrimaryPart
+	if not base then
+		return
+	end
+	for _, p in placed do
+		local cfg = Decor.Get(p.id)
+		local offset = Decor.SLOTS[p.slot]
+		if not cfg or not offset then
+			continue
+		end
+		local at = base.CFrame * CFrame.new(offset) * CFrame.Angles(0, math.rad(90 * (p.rot or 0)), 0)
+		local clone = ModelCatalog.Clone(cfg.modelName)
+		if clone then
+			ModelCatalog.AnchorAll(clone)
+			ModelCatalog.PivotTo(clone, at)
+			clone:SetAttribute("DecorSlot", p.slot)
+			clone.Parent = folder
+		else
+			local part = Instance.new("Part")
+			part.Name = "Asset_" .. cfg.modelName
+			part.Anchored = true
+			part.CanCollide = false
+			part.CanTouch = false
+			part.Size = cfg.placeholderSize
+			part.Color = cfg.placeholderColor
+			part.Material = Enum.Material.SmoothPlastic
+			part.CFrame = at * CFrame.new(0, cfg.placeholderSize.Y / 2, 0)
+			part:SetAttribute("DecorSlot", p.slot)
+			part.Parent = folder
+		end
+	end
+end
+
+-- Hazır emoji tepkisini parsel tabelasının üstünde kısa süre gösterir (sohbet yok).
+function PlotService.ShowReaction(info: PlotInfo, emoji: string)
+	local bb = Instance.new("BillboardGui")
+	bb.Name = "Reaction"
+	bb.Size = UDim2.fromOffset(60, 60)
+	bb.StudsOffset = Vector3.new(math.random(-3, 3), 5, 0)
+	bb.AlwaysOnTop = true
+	local t = Instance.new("TextLabel")
+	t.Size = UDim2.fromScale(1, 1)
+	t.BackgroundTransparency = 1
+	t.Text = emoji
+	t.TextScaled = true
+	t.Parent = bb
+	bb.Parent = info.sign
+	task.delay(3, function()
+		bb:Destroy()
+	end)
 end
 
 return PlotService

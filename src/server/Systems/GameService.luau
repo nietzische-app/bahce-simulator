@@ -27,11 +27,26 @@ local QuestService = require(script.Parent.QuestService)
 local GearService = require(script.Parent.GearService)
 local CollectionService = require(script.Parent.CollectionService)
 local OfflineService = require(script.Parent.OfflineService)
+local DecorService = require(script.Parent.DecorService)
+local LikeService = require(script.Parent.LikeService)
+local Social = require(game.ReplicatedStorage.Shared.Config.Social)
 
 local GameService = {}
 
 local store = ProfileStore.new(GameConfig.DATA_STORE_NAME)
 local limiter = RateLimiter.new(8, 4) -- burst 8, refill 4/sec
+local socialLimiter = RateLimiter.new(3, 0.5) -- ziyaret/beğeni/tepki: burst 3, 1 per 2s
+local lastSocial: { [string]: number } = {}
+
+local function cooldownOk(player: Player, action: string, seconds: number): boolean
+	local key = tostring(player.UserId) .. ":" .. action
+	local now = os.clock()
+	if lastSocial[key] and now - lastSocial[key] < seconds then
+		return false
+	end
+	lastSocial[key] = now
+	return true
+end
 
 local function notify(player: Player, message: string, kind: string?)
 	Remotes.Event("Notify"):FireClient(player, {
@@ -54,6 +69,9 @@ local function buildState(player: Player, data: any)
 		stock = StockService.Snapshot(player.UserId, os.time()),
 		gear = GearService.Serialize(data, os.time()),
 		collection = CollectionService.Serialize(data),
+		decor = DecorService.Serialize(data),
+		likes = LikeService.Likes(data),
+		reactions = Social.REACTIONS,
 		weather = WeatherService.GetState(),
 		seeds = Seeds.ListOrdered(),
 		shop = {
@@ -85,6 +103,21 @@ local function pushState(player: Player)
 	LeaderboardService.SetCoins(player, profile.Data.coins)
 	LeaderboardService.SetHarvested(player, profile.Data.totalHarvested)
 	PlantService.SyncVisuals(player, profile.Data)
+	local plot = PlotService.GetPlotForUser(player.UserId)
+	if plot then
+		PlotService.RenderDecor(plot, DecorService.Ensure(profile.Data).placed)
+		PlotService.SetLikes(plot, LikeService.Likes(profile.Data))
+	end
+	local ls = player:FindFirstChild("leaderstats")
+	if ls then
+		local lv = ls:FindFirstChild("Beğeni") :: IntValue?
+		if not lv then
+			lv = Instance.new("IntValue")
+			lv.Name = "Beğeni"
+			lv.Parent = ls
+		end
+		lv.Value = LikeService.Likes(profile.Data)
+	end
 	Remotes.Event("StateUpdate"):FireClient(player, buildState(player, profile.Data))
 end
 
@@ -171,6 +204,13 @@ local function onPlayerRemoving(player: Player)
 	PlotService.ReleasePlots(player.UserId)
 	store:Release(player)
 	limiter:ClearPlayer(player)
+	socialLimiter:ClearPlayer(player)
+	local prefix = tostring(player.UserId) .. ":"
+	for k in lastSocial do
+		if string.sub(k, 1, #prefix) == prefix then
+			lastSocial[k] = nil
+		end
+	end
 	StockService.ClearPlayer(player.UserId)
 end
 
@@ -319,6 +359,159 @@ function GameService.Init()
 			end
 			pushState(player)
 		end)
+	end)
+
+	-- Dekor (kozmetik, coin ile). Konum sunucuda yuva indeksiyle doğrulanır: sadece kendi parseli.
+	Remotes.Event("BuyDecor").OnServerEvent:Connect(function(player, id, amount)
+		if typeof(id) ~= "string" or #id > 40 then
+			return
+		end
+		withProfile(player, "decor", function(profile)
+			local ok, msg = DecorService.Buy(profile.Data, id, if typeof(amount) == "number" then amount else 1)
+			notify(player, msg, if ok then "ok" else "warn")
+			pushState(player)
+		end)
+	end)
+
+	Remotes.Event("PlaceDecor").OnServerEvent:Connect(function(player, id, slot, rot)
+		if typeof(id) ~= "string" or #id > 40 or typeof(slot) ~= "number" then
+			return
+		end
+		withProfile(player, "decor", function(profile)
+			local ok, msg = DecorService.Place(profile.Data, id, slot, if typeof(rot) == "number" then rot else nil)
+			notify(player, msg, if ok then "ok" else "warn")
+			pushState(player)
+		end)
+	end)
+
+	Remotes.Event("RemoveDecor").OnServerEvent:Connect(function(player, slot)
+		if typeof(slot) ~= "number" then
+			return
+		end
+		withProfile(player, "decor", function(profile)
+			local ok, msg = DecorService.Remove(profile.Data, slot)
+			notify(player, msg, if ok then "ok" else "warn")
+			pushState(player)
+		end)
+	end)
+
+	Remotes.Event("MoveDecor").OnServerEvent:Connect(function(player, fromSlot, toSlot, rot)
+		if typeof(fromSlot) ~= "number" or typeof(toSlot) ~= "number" then
+			return
+		end
+		withProfile(player, "decor", function(profile)
+			local ok, msg =
+				DecorService.Move(profile.Data, fromSlot, toSlot, if typeof(rot) == "number" then rot else nil)
+			notify(player, msg, if ok then "ok" else "warn")
+			pushState(player)
+		end)
+	end)
+
+	-- Bahçeler: aynı sunucudaki oyuncular. Ziyaret sadece ışınlar; başkasının parselinde
+	-- ekme/hasat/dekor işlemleri yalnızca kendi profiline yazdığı için etkisizdir.
+	Remotes.Function("ListGardens").OnServerInvoke = function(player)
+		if not socialLimiter:Allow(player, "list") then
+			return {}
+		end
+		local me = store:Get(player)
+		local now = os.time()
+		local out = {}
+		for _, other in Players:GetPlayers() do
+			local prof = store:Get(other)
+			local plot = PlotService.GetPlotForUser(other.UserId)
+			if prof and plot then
+				table.insert(out, {
+					userId = other.UserId,
+					name = other.DisplayName,
+					plotIndex = plot.index,
+					likes = LikeService.Likes(prof.Data),
+					isMe = other == player,
+					likedToday = if me then LikeService.LikedToday(me.Data, other.UserId, now) else false,
+				})
+			end
+		end
+		table.sort(out, function(a, b)
+			return a.likes > b.likes
+		end)
+		return out
+	end
+
+	local function teleportTo(player: Player, userId: number): boolean
+		local plot = PlotService.GetPlotForUser(userId)
+		local char = player.Character
+		local hrp = char and char:FindFirstChild("HumanoidRootPart") :: BasePart?
+		if not plot or not hrp or not plot.model.PrimaryPart then
+			return false
+		end
+		hrp.CFrame = plot.model.PrimaryPart.CFrame + Vector3.new(0, 5, 14)
+		return true
+	end
+
+	Remotes.Event("VisitGarden").OnServerEvent:Connect(function(player, userId)
+		if typeof(userId) ~= "number" or userId ~= userId then
+			return
+		end
+		if not cooldownOk(player, "visit", Social.VISIT_COOLDOWN_SECONDS) then
+			notify(player, "Biraz bekle, sonra ziyaret et.", "warn")
+			return
+		end
+		local target = Players:GetPlayerByUserId(userId)
+		if not target or not store:Get(target) then
+			notify(player, "Bu bahçe artık burada değil.", "warn")
+			return
+		end
+		if teleportTo(player, userId) then
+			notify(player, target.DisplayName .. " bahçesine hoş geldin! 🌸", "ok")
+		end
+	end)
+
+	Remotes.Event("ReturnHome").OnServerEvent:Connect(function(player)
+		if not cooldownOk(player, "visit", Social.VISIT_COOLDOWN_SECONDS) then
+			return
+		end
+		teleportTo(player, player.UserId)
+	end)
+
+	Remotes.Event("LikeGarden").OnServerEvent:Connect(function(player, userId)
+		if typeof(userId) ~= "number" or userId ~= userId then
+			return
+		end
+		if not socialLimiter:Allow(player, "like") then
+			notify(player, "Çok hızlı! Biraz bekle.", "warn")
+			return
+		end
+		local target = Players:GetPlayerByUserId(userId)
+		local me = store:Get(player)
+		local them = target and store:Get(target)
+		if not target or not me or not them then
+			notify(player, "Bu bahçe artık burada değil.", "warn")
+			return
+		end
+		local ok, msg = LikeService.Like(me.Data, them.Data, player.UserId, userId, os.time())
+		notify(player, msg, if ok then "ok" else "warn")
+		if ok then
+			notify(target, player.DisplayName .. " bahçeni beğendi! 💚", "ok")
+			local plot = PlotService.GetPlotForUser(userId)
+			if plot then
+				PlotService.ShowReaction(plot, "💚")
+			end
+			pushState(target)
+		end
+	end)
+
+	Remotes.Event("SendReaction").OnServerEvent:Connect(function(player, userId, emoji)
+		if typeof(userId) ~= "number" or not Social.IsReaction(emoji) or userId == player.UserId then
+			return
+		end
+		if not cooldownOk(player, "react", Social.REACTION_COOLDOWN_SECONDS) then
+			return
+		end
+		local target = Players:GetPlayerByUserId(userId)
+		local plot = PlotService.GetPlotForUser(userId)
+		if target and plot then
+			PlotService.ShowReaction(plot, emoji)
+			notify(target, player.DisplayName .. " bahçene " .. emoji .. " bıraktı!", "info")
+		end
 	end)
 
 	Remotes.Event("PromptGamepass").OnServerEvent:Connect(function(player, key)

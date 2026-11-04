@@ -21,6 +21,14 @@ local EVENT_NAMES = {
 	"ClaimQuest",
 	"ClaimCollection",
 	"OfflineSummary",
+	"BuyDecor",
+	"PlaceDecor",
+	"RemoveDecor",
+	"MoveDecor",
+	"VisitGarden",
+	"ReturnHome",
+	"LikeGarden",
+	"SendReaction",
 	"RequestState",
 	"StateUpdate",
 	"Notify",
@@ -30,6 +38,7 @@ local EVENT_NAMES = {
 
 local FUNCTION_NAMES = {
 	"GetLeaderboard",
+	"ListGardens",
 }
 
 local function ensureFolder(): Folder
