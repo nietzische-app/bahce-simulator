@@ -13,6 +13,13 @@ local remotesFolder: Folder
 local getSelectedSeed: (() -> string?)?
 local getState: (() -> any)?
 
+local function hint(msg: string)
+	local StarterGui = game:GetService("StarterGui")
+	pcall(function()
+		StarterGui:SetCore("SendNotification", { Title = "Minik Bahçe", Text = msg, Duration = 3 })
+	end)
+end
+
 function PlotController.Init(remotes: Folder, selectedSeedFn: () -> string?, stateFn: () -> any)
 	remotesFolder = remotes
 	getSelectedSeed = selectedSeedFn
@@ -47,10 +54,12 @@ function PlotController.Init(remotes: Folder, selectedSeedFn: () -> string?, sta
 			end
 		end
 		if not owned then
+			hint("Bu parsel senin değil. Adının yazdığı parsele git.")
 			return
 		end
 
 		if soil:GetAttribute("Locked") == true then
+			hint("Bu yatak kilitli. Dükkândan Ekstra Yatak alabilirsin.")
 			return
 		end
 
@@ -89,6 +98,8 @@ function PlotController.Init(remotes: Folder, selectedSeedFn: () -> string?, sta
 		end
 		if seedId then
 			plantEvent:FireServer(seedId, slotIndex)
+		else
+			hint("Tohumun yok. Dükkândan tohum al.")
 		end
 	end)
 

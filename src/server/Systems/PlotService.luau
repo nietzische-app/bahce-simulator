@@ -50,7 +50,7 @@ local function buildSlot(parent: Folder, slotIndex: number, origin: CFrame): Bas
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name = "PlotPrompt"
 	prompt.ActionText = "Etkileşim"
-	prompt.ObjectText = "Tarze Yatağı " .. tostring(slotIndex)
+	prompt.ObjectText = "Tarla Yatağı " .. tostring(slotIndex)
 	prompt.HoldDuration = 0.2
 	prompt.MaxActivationDistance = 12
 	prompt.RequiresLineOfSight = false
