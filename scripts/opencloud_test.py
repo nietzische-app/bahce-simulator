@@ -43,13 +43,13 @@ def req(method, url, body=None, ctype="application/json", tries=5):
 
 
 def main():
-    out = os.path.join(ROOT, "build", "BahceSimulator.rbxlx")
+    out = os.path.join(ROOT, "build", "BahceSimulator.rbxl")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     subprocess.run(["rojo", "build", "-o", out], cwd=ROOT, check=True)
 
     with open(out, "rb") as f:
         v = req("POST", f"{API}/universes/v1/{UNIVERSE}/places/{PLACE}/versions?versionType=Saved",
-                f.read(), "application/xml")["versionNumber"]
+                f.read(), "application/octet-stream")["versionNumber"]
     print(f"Uploaded saved version {v}")
 
     with open(os.path.join(ROOT, "scripts", "opencloud_probe.luau")) as f:
