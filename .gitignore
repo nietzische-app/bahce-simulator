@@ -1,0 +1,25 @@
+# Build
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+sourcemap.json
+
+# Tooling
+Packages/
+ServerPackages/
+DevPackages/
+.wally/
+*.lock.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Secrets (never commit)
+.env
+.env.*
+*.token

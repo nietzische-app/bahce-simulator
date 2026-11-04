@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rojo
+        run: |
+          curl -fsSL -o rojo.zip "https://github.com/rojo-rbx/rojo/releases/download/v7.7.1/rojo-7.7.1-linux-x86_64.zip"
+          unzip -o rojo.zip
+          sudo install -m 755 rojo /usr/local/bin/rojo
+          rojo --version
+
+      - name: Install Selene
+        run: |
+          curl -fsSL -o selene.zip "https://github.com/Kampfkarren/selene/releases/download/0.32.0/selene-0.32.0-linux.zip"
+          unzip -o selene.zip
+          sudo install -m 755 selene /usr/local/bin/selene
+          selene --version
+
+      - name: Lint (selene)
+        run: selene src
+
+      - name: Build place
+        run: rojo build -o BahceSimulator.rbxlx
+
+      - name: Upload place artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BahceSimulator-rbxlx
+          path: BahceSimulator.rbxlx
+          if-no-files-found: error
