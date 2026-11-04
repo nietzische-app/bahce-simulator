@@ -403,8 +403,8 @@ function MainHud.Create(handlers: {
 	}
 
 	btnInv.MouseButton1Click:Connect(handles.toggleInventory)
-	btnShop.MouseButton1Click:Connect(handles.toggleShop)
-(handles :: any).GetSelectedSeed = function(): string?
+	btnShop.MouseButton1Click:Connect(handles.toggleShop);
+	(handles :: any).GetSelectedSeed = function(): string?
 		return (handles :: any)._selectedSeed
 	end
 
