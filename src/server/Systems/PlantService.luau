@@ -52,7 +52,8 @@ function PlantService.Plant(data: Types.PlayerData, seedId: string, slotIndex: n
 		return false, "Geçersiz tohum."
 	end
 	local maxSlots = PlantService.MaxSlots(data)
-	if slotIndex < 1 or slotIndex > maxSlots then
+	-- Reject NaN / non-integer slots (NaN slips past range checks and eats a seed)
+	if slotIndex ~= slotIndex or slotIndex % 1 ~= 0 or slotIndex < 1 or slotIndex > maxSlots then
 		return false, "Bu yatak kilitli veya yok."
 	end
 	local _, existing = PlantService.FindPlant(data, slotIndex)

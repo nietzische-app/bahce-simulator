@@ -49,7 +49,8 @@ end
 
 function EconomyService.BuySeed(data: Types.PlayerData, seedId: string, amount: number): (boolean, string)
 	amount = math.floor(amount)
-	if amount < 1 or amount > 50 then
+	-- amount ~= amount catches NaN, which would otherwise turn coins into NaN
+	if amount ~= amount or amount < 1 or amount > 50 then
 		return false, "Geçersiz miktar."
 	end
 	local seed = Seeds.Get(seedId)
