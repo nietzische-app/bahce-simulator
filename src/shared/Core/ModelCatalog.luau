@@ -1,11 +1,13 @@
 --!strict
 --[[
-	Looks up imported Studio meshes under ReplicatedStorage.Models.
-	FBX files live in repo assets/models/ and must be imported via Studio
-	(3D Importer / Asset Manager) into ReplicatedStorage/Models/<Name>.
+	Looks up imported meshes under ReplicatedStorage.Models.
+	Find returns that mesh only. Clone uses it when present, otherwise
+	ModelFallback (Parts). FBX import is optional.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local ModelFallback = require(script.Parent.ModelFallback)
 
 local ModelCatalog = {}
 
@@ -17,6 +19,7 @@ local function modelsFolder(): Folder?
 	return nil
 end
 
+-- Imported instance only. Missing names return nil (Clone builds a fallback).
 function ModelCatalog.Find(name: string): Instance?
 	if name == "" then
 		return nil
@@ -34,12 +37,12 @@ end
 
 function ModelCatalog.Clone(name: string): Instance?
 	local template = ModelCatalog.Find(name)
-	if not template then
-		return nil
+	if template then
+		local clone = template:Clone()
+		clone.Name = name
+		return clone
 	end
-	local clone = template:Clone()
-	clone.Name = name
-	return clone
+	return ModelFallback.Build(name)
 end
 
 function ModelCatalog.AnchorAll(root: Instance)

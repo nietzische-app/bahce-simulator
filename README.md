@@ -2,7 +2,7 @@
 
 Çocuklara uygun, orijinal temalı bir Roblox bahçe simülatörü MVP’si. Tohum ek, büyümesini bekle (çevrimdışı zaman damgası ile), hasat et, dükkândan sat / yükselt. Grow a Garden tarzı döngü; meme/şaka yok, sakin ve güvenli.
 
-> Bu depo bir **Rojo** projesidir. `assets/models/*.fbx` AI art pass mesh’leridir; Studio’ya import edilince kod placeholder Part yerine bunları kullanır.
+> Bu depo bir **Rojo** projesidir. FBX import **isteğe bağlıdır**: `ReplicatedStorage.Models` boşken Play, `ModelFallback` ile renkli Part / silindir / küre / kama modelleri gösterir. Aynı isimle import edilen mesh varsa o kullanılır.
 
 ## Özellikler
 
@@ -109,7 +109,7 @@ Kaynak dosyalar: `assets/models/*.fbx` (ve isteğe bağlı `.obj`). Önizleme: `
 | `SeedShopStall.fbx` | `ReplicatedStorage/Models/SeedShopStall` |
 | `SellStand.fbx` | `ReplicatedStorage/Models/SellStand` |
 
-5. Oyun çalışınca `PlotService` / `ModelCatalog` mesh varsa klonlar; yoksa renkli Part placeholder kalır.
+5. Oyun çalışınca `ModelCatalog` önce `ReplicatedStorage.Models/<Ad>` klonlar. Kayıt yoksa `ModelFallback` çocuk dostu bir Part modeli kurar (bitki, pet, dekor, ağaç, tezgâh). FBX olmadan da Play dolu görünür.
 
 ### Art pipeline (yeniden üret)
 

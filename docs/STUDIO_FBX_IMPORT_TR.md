@@ -1,6 +1,6 @@
 # Studio'ya FBX / OBJ import (Minik bahçe)
 
-Rojo **FBX/OBJ enjekte edemez**. Modelleri Roblox Studio'da 3D Importer ile `ReplicatedStorage.Models` altına koymanız gerekir.
+Rojo **FBX/OBJ enjekte edemez**. Import **isteğe bağlıdır**: etmezseniz Play, `ModelFallback` ile Parçalardan kurulmuş renkli modeller gösterir (bitki, pet, dekor, ağaç, dükkân). Aynı isimli mesh `ReplicatedStorage.Models` altındaysa o yedeğin önüne geçer.
 
 ## Adımlar
 
@@ -12,7 +12,7 @@ Rojo **FBX/OBJ enjekte edemez**. Modelleri Roblox Studio'da 3D Importer ile `Rep
    - Pivot: taban merkezi (cleanup ile tabana oturtuldu).
 5. Import sonrası Model adını **birebir** aşağıdaki listeden biri yapın.
 6. Model'i `ReplicatedStorage` → `Models` klasörüne taşıyın (yoksa oluşturun).
-7. Oyun yer tutucu Part'ları bu isimlerle değiştirir (`WorldLayout` + Config).
+7. Oyun bu isimdeki import edilmiş modeli kullanır. Import yoksa `ModelFallback` aynı isimle devrededir.
 
 ## İsim listesi (bu pas)
 
@@ -31,7 +31,7 @@ Rojo **FBX/OBJ enjekte edemez**. Modelleri Roblox Studio'da 3D Importer ile `Rep
 ### Pet (hazır)
 `Pet_Fox`
 
-### Yarına bırakılan (şimdilik import etmeyin / yoksa yer tutucu kalır)
+### Bunların da Part yedeği var (mesh isteğe bağlı)
 `Pet_Bunny`, `Pet_Chick`, `Pet_Frog`, `Pet_Owl`, `Pet_Hedgehog`, `Pet_Dragon`, `Decor_Fountain`, `Decor_Birdhouse`, `Decor_Swing`
 
 ## .rbxm alternatifi

@@ -1,7 +1,7 @@
 --!strict
 --[[
 	Equipped pets follow the local player. Uses ReplicatedStorage.Models/<modelName>
-	when present; otherwise a coloured placeholder Part. No code-drawn art sprites.
+	when present; otherwise ModelFallback. No code-drawn art sprites.
 ]]
 
 local Players = game:GetService("Players")
