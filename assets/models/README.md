@@ -1,6 +1,6 @@
 # Studio FBX / OBJ models
 
-Import into Roblox Studio → **ReplicatedStorage/Models/<stem>**. See `docs/STUDIO_FBX_IMPORT_TR.md`.
+Optional. Import into Roblox Studio → **ReplicatedStorage/Models/<stem>** when you want the mesh. If a name is missing, Play uses `src/shared/Core/ModelFallback.luau`. See `docs/STUDIO_FBX_IMPORT_TR.md`.
 
 ## Crops / hub (art pass 1)
 SunBloom/DewLeaf/CloudBerry/MoonPetal/StarRoot (`_seedling` + `_mature`), GardenPlot, SeedShopStall, SellStand.

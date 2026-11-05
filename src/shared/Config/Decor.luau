@@ -2,7 +2,7 @@
 --[[
 	Dekorasyon dükkânı. Tamamen kozmetik — oyuna etki etmez (pay-to-win yok).
 	Sadece coin ile alınır (Robux YOK). Görseller ReplicatedStorage.Models/<modelName>
-	altından gelir; yoksa sunucu basit bir yer tutucu Part koyar.
+	varsa oradan, yoksa ModelFallback ile kurulur. FBX isteğe bağlıdır.
 ]]
 
 export type DecorConfig = {

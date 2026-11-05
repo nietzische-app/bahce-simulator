@@ -2,7 +2,7 @@
 --[[
 	Evcil hayvanlar: yumurta sadece COIN ile alınır, oranlar UI'da açık, pity garanti.
 	Her yumurta mutlaka faydalı bir pet verir. Takas/hediye YOK. Robux yumurta YOK.
-	Modeller: ReplicatedStorage.Models/<modelName>; yoksa yer tutucu Part.
+	Modeller: ReplicatedStorage.Models/<modelName>; yoksa ModelFallback. FBX isteğe bağlıdır.
 ]]
 
 export type PetBonus = {

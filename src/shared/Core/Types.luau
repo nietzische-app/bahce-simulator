@@ -16,7 +16,7 @@ export type SeedConfig = {
 	color: Color3,
 	-- Asset hook: Roblox asset id (optional) OR ReplicatedStorage.Models name
 	assetId: string?,
-	-- Model names under ReplicatedStorage/Models (imported FBX from assets/models)
+	-- Model names. Imported mesh when present, otherwise ModelFallback.
 	modelSeedling: string?,
 	modelMature: string?,
 }

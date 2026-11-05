@@ -18,6 +18,7 @@ local specs = {
 	"events",
 	"crafting",
 	"rebirth",
+	"modelfallback",
 }
 for _, name in specs do
 	local ok, err = pcall(function()

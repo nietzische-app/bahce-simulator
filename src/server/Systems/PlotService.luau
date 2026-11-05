@@ -1,7 +1,8 @@
 --!strict
 --[[
-	Builds N placeholder plots at runtime from Parts.
-	Names follow Asset_* hooks so Studio/AI art can replace later.
+	Builds plots and hub scenery from Parts.
+	Props, plants, decor, and sprinklers prefer ReplicatedStorage.Models.
+	When that mesh is missing, ModelCatalog.Clone uses ModelFallback.
 ]]
 
 local Workspace = game:GetService("Workspace")
@@ -188,6 +189,7 @@ function PlotService.TrySpawnWorldProps()
 	end
 
 	local spawned = 0
+	local procedural = 0
 	local missing = 0
 	for _, spec in WorldLayout.AllProps() do
 		local yaw = math.rad(spec.yawDegrees or 0)
@@ -198,39 +200,18 @@ function PlotService.TrySpawnWorldProps()
 			ModelCatalog.PivotTo(clone, cframe)
 			clone.Parent = folder
 			spawned += 1
+			if clone:GetAttribute("ProceduralFallback") == true then
+				procedural += 1
+			end
 		else
 			missing += 1
-			-- Named placeholder so Studio art can replace later
-			local marker = Instance.new("Part")
-			marker.Name = "Asset_" .. spec.name
-			marker.Size = Vector3.new(4, 1, 4)
-			marker.Anchored = true
-			marker.Color = Color3.fromRGB(180, 160, 120)
-			marker.Material = Enum.Material.Wood
-			marker.CFrame = cframe * CFrame.new(0, 0.5, 0)
-			marker.Parent = folder
-			local bb = Instance.new("BillboardGui")
-			bb.Size = UDim2.fromOffset(160, 28)
-			bb.StudsOffset = Vector3.new(0, 3, 0)
-			bb.AlwaysOnTop = true
-			bb.Parent = marker
-			local label = Instance.new("TextLabel")
-			label.Size = UDim2.fromScale(1, 1)
-			label.BackgroundTransparency = 1
-			label.Text = spec.name .. " (FBX import et)"
-			label.TextScaled = true
-			label.Font = Enum.Font.Gotham
-			label.TextColor3 = Color3.new(1, 1, 1)
-			label.Parent = bb
+			warn(string.format("[PlotService] World prop %q has no visual", spec.name))
 		end
 	end
-	print(
-		string.format(
-			"[PlotService] WorldProps spawned=%d missing=%d (import FBX → ReplicatedStorage.Models)",
-			spawned,
-			missing
-		)
-	)
+	print(string.format("[PlotService] WorldProps placed=%d procedural=%d", spawned, procedural))
+	if missing > 0 then
+		warn(string.format("[PlotService] WorldProps missing=%d", missing))
+	end
 end
 
 function PlotService.GetPlots(): { PlotInfo }
@@ -370,41 +351,36 @@ function PlotService.UpdatePlantVisual(
 				end
 			end
 
-			-- Prefer imported mesh from ReplicatedStorage.Models when available
-			if modelName and ModelCatalog.Find(modelName) then
-				local needSwap = true
+			local progressScale = math.clamp(0.55 + (progress or 0) * 0.55, 0.5, 1.15)
+			local plantCf = soil.CFrame * CFrame.new(0, soil.Size.Y / 2, 0)
+
+			-- Clone prefers an imported mesh and otherwise builds ModelFallback.
+			if modelName and modelName ~= "" then
 				if existing and existing:GetAttribute("ModelName") == modelName then
-					needSwap = false
-				end
-				if needSwap then
-					if existing then
-						existing:Destroy()
+					if existing:IsA("Model") then
+						existing:ScaleTo(progressScale)
+						ModelCatalog.PivotTo(existing, plantCf)
 					end
-					local clone = ModelCatalog.Clone(modelName)
-					if clone then
-						clone.Name = "Asset_PlantVisual"
-						clone:SetAttribute("ModelName", modelName)
-						ModelCatalog.AnchorAll(clone)
-						clone.Parent = soil
-						local height = 0.8 + (progress or 0) * 1.4
-						local cf = soil.CFrame * CFrame.new(0, soil.Size.Y / 2, 0)
-						ModelCatalog.PivotTo(clone, cf)
-						-- Scale approx by progress for seedling→mature feel when same mesh reused
-						if clone:IsA("Model") then
-							clone:ScaleTo(math.clamp(0.55 + (progress or 0) * 0.55, 0.5, 1.15))
-						end
-						existing = clone
-					end
-				elseif existing and existing:IsA("Model") then
-					existing:ScaleTo(math.clamp(0.55 + (progress or 0) * 0.55, 0.5, 1.15))
-					ModelCatalog.PivotTo(existing, soil.CFrame * CFrame.new(0, soil.Size.Y / 2, 0))
+					return
 				end
 				if existing then
+					existing:Destroy()
+				end
+				local clone = ModelCatalog.Clone(modelName)
+				if clone then
+					clone.Name = "Asset_PlantVisual"
+					clone:SetAttribute("ModelName", modelName)
+					ModelCatalog.AnchorAll(clone)
+					ModelCatalog.PivotTo(clone, plantCf)
+					clone.Parent = soil
+					if clone:IsA("Model") then
+						clone:ScaleTo(progressScale)
+					end
 					return
 				end
 			end
 
-			-- Placeholder Part fallback (no imported mesh yet)
+			-- Last resort when the seed has no model name.
 			local visual: BasePart
 			if existing and existing:IsA("BasePart") then
 				visual = existing
@@ -433,7 +409,7 @@ function PlotService.UpdatePlantVisual(
 	end
 end
 
--- Sprinkler visual: imported "Sprinkler" model if present, else a simple Part placeholder.
+-- Sprinkler visual: imported mesh when present, otherwise ModelFallback.
 function PlotService.SetSprinkler(info: PlotInfo, active: boolean)
 	local existing = info.model:FindFirstChild("Asset_Sprinkler")
 	if not active then
@@ -445,8 +421,9 @@ function PlotService.SetSprinkler(info: PlotInfo, active: boolean)
 	if existing or not info.model.PrimaryPart then
 		return
 	end
-	local at = info.model.PrimaryPart.CFrame * CFrame.new(0, 1.5, 0)
-	local clone = if ModelCatalog.Find("Sprinkler") then ModelCatalog.Clone("Sprinkler") else nil
+	local basePart = info.model.PrimaryPart
+	local at = basePart.CFrame * CFrame.new(0, basePart.Size.Y / 2, 0)
+	local clone = ModelCatalog.Clone("Sprinkler")
 	if clone then
 		clone.Name = "Asset_Sprinkler"
 		ModelCatalog.AnchorAll(clone)
@@ -483,7 +460,7 @@ function PlotService.GetPlotForUser(userId: number): PlotInfo?
 	return if owned then owned[1] else nil
 end
 
--- Kozmetik dekor: ReplicatedStorage.Models/<modelName> varsa onu, yoksa adlandırılmış yer tutucu Part.
+-- Kozmetik dekor: import edilmiş mesh varsa o, yoksa ModelFallback. Part yalnızca ikisi de yoksa.
 function PlotService.RenderDecor(info: PlotInfo, placed: { any })
 	local folder = info.model:FindFirstChild("Decor")
 	if folder then

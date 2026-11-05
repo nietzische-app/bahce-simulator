@@ -1,8 +1,8 @@
 --!strict
 --[[
-	Hub / çevre dekor yerleşimi. Modeller ReplicatedStorage.Models/<name>
-	altından runtime clone edilir; yoksa PlotService yer tutucu Part koyar.
-	Yarınlık 9 model (Pet_* çoğu, Fountain/Birdhouse/Swing) burada yok.
+	Hub / çevre dekor yerleşimi. Görseller ReplicatedStorage.Models/<name>
+	varsa oradan, yoksa ModelFallback ile kurulur. FBX isteğe bağlıdır.
+	Pet modelleri burada değil; takipçi onları oyuncunun yanında gösterir.
 ]]
 
 export type PropSpec = {
