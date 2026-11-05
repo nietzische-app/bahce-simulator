@@ -293,8 +293,8 @@ def main() -> int:
         return 1 if bad and not any(r.get("fbx") for r in results) else 0
 
     man = load_manifest(Path(args.from_manifest))
-    style = man.get("style") or STYLE
     global STYLE
+    style = man.get("style") or STYLE
     STYLE = style
     items = man["items"]
     if args.name:
